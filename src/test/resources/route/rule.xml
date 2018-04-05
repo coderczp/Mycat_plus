@@ -16,7 +16,7 @@
 			<algorithm>func</algorithm>
 		</rule>
 	</tableRule>
-	
+
 	<tableRule name="dateRule">
 		<rule>
 			<columns>col_date</columns>
@@ -49,50 +49,48 @@
 		</rule>
 	</tableRule>
 
-    <tableRule name="auto-sharding-rang-mod">
-        <rule>
-            <columns>id</columns>
-            <algorithm>rang-mod</algorithm>
-        </rule>
-    </tableRule>
-    
-    <tableRule name="partitionByMod">
-    	<rule>
-    		<columns>id</columns>
-    		<algorithm>partitionByMod</algorithm>
-    	</rule>
-    </tableRule>
-    
-    <tableRule name="rangeDateHash">
-        <rule>
-            <columns>col_date</columns>
-            <algorithm>range-date-hash</algorithm>
-        </rule>
-    </tableRule>
+	<tableRule name="auto-sharding-rang-mod">
+		<rule>
+			<columns>id</columns>
+			<algorithm>rang-mod</algorithm>
+		</rule>
+	</tableRule>
+
+	<tableRule name="partitionByMod">
+		<rule>
+			<columns>id</columns>
+			<algorithm>partitionByMod</algorithm>
+		</rule>
+	</tableRule>
+
+	<tableRule name="rangeDateHash">
+		<rule>
+			<columns>col_date</columns>
+			<algorithm>range-date-hash</algorithm>
+		</rule>
+	</tableRule>
 	<tableRule name="crc32slot">
 		<rule>
 			<columns>id</columns>
 			<algorithm>crc32slot</algorithm>
 		</rule>
 	</tableRule>
-	
+
 	<tableRule name="mod-long">
 		<rule>
 			<columns>id</columns>
 			<algorithm>mod-long</algorithm>
 		</rule>
 	</tableRule>
-	
+
 	<function name="partitionByMod" class="io.mycat.route.function.PartitionByMod">
 		<property name="count">2</property>
 	</function>
-	<function name="func1"
-		class="io.mycat.route.function.PartitionByFileMap">
+	<function name="func1" class="io.mycat.route.function.PartitionByFileMap">
 		<property name="defaultNode">0</property>
 		<property name="mapFile">sharding.txt</property>
 	</function>
-	<function name="func"
-		class="io.mycat.route.function.PartitionByString">
+	<function name="func" class="io.mycat.route.function.PartitionByString">
 		<property name="partitionCount">128</property>
 		<property name="partitionLength">8</property>
 		<property name="hashSlice">:8</property>
@@ -101,41 +99,37 @@
 		<property name="partitionCount">128</property>
 		<property name="partitionLength">8</property>
 	</function>
-	<function name="rang-long"
-		class="io.mycat.route.function.AutoPartitionByLong">
+	<function name="rang-long" class="io.mycat.route.function.AutoPartitionByLong">
 		<property name="mapFile">autopartition-long.txt</property>
 	</function>
-	<function name="rang-long2"
-		class="io.mycat.route.function.AutoPartitionByLong">
+	<function name="rang-long2" class="io.mycat.route.function.AutoPartitionByLong">
 		<property name="mapFile">autopartition-long2.txt</property>
 	</function>
-	<function name="by-date"
-		class="io.mycat.route.function.PartitionByDate">                            
+	<function name="by-date" class="io.mycat.route.function.PartitionByDate">
 		<property name="sBeginDate">2014-01-01</property>
 		<property name="sPartionDay">10</property>
 		<property name="dateFormat">yyyy-MM-dd</property>
 	</function>
 
-    <function name="rang-mod"
-              class="io.mycat.route.function.PartitionByRangeMod">
-        <property name="mapFile">partition-range-mod.txt</property>
-    </function>
+	<function name="rang-mod" class="io.mycat.route.function.PartitionByRangeMod">
+		<property name="mapFile">partition-range-mod.txt</property>
+	</function>
 
-    <function name="range-date-hash"
-              class="io.mycat.route.function.PartitionByRangeDateHash">
-        <property name="sBeginDate">2014-01-01 00:00:00</property>
-        <property name="sPartionDay">3</property>
-        <property name="dateFormat">yyyy-MM-dd HH:mm:ss</property>
-        <property name="groupPartionSize">6</property>
-    </function>
+	<function name="range-date-hash"
+		class="io.mycat.route.function.PartitionByRangeDateHash">
+		<property name="sBeginDate">2014-01-01 00:00:00</property>
+		<property name="sPartionDay">3</property>
+		<property name="dateFormat">yyyy-MM-dd HH:mm:ss</property>
+		<property name="groupPartionSize">6</property>
+	</function>
 
 	<function name="crc32slot"
-			  class="io.mycat.route.function.PartitionByCRC32PreSlot">
+		class="io.mycat.route.function.PartitionByCRC32PreSlot">
 		<property name="count">2</property><!-- 要分片的数据库节点数量，必须指定，否则没法分片 -->
 	</function>
-	
+
 	<function name="mod-long" class="io.mycat.route.function.PartitionByMod">
-			<!-- how many data nodes -->
-			<property name="count">2</property>
+		<!-- how many data nodes -->
+		<property name="count">2</property>
 	</function>
 </mycat:rule>
