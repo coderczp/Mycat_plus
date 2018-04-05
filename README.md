@@ -1,7 +1,7 @@
 # Mycat_plus
 Mycat1.6深度优化版本,只支持Mysql协议,专注于Mysql分库分表,争取做成工业级产品
 
-##0.0.1版本特性
+## 0.0.1版本特性
 
 	0. 删除对log4j的直接依赖,全部改为slf4j
 	1. 删除非Mysql的支持
@@ -12,5 +12,5 @@ Mycat1.6深度优化版本,只支持Mysql协议,专注于Mysql分库分表,争�
 
 第一版本预计7月发布
 
-##欢迎加入Mycat_plus官方QQ群,别忘记star: 
-   [点击链接加入群聊【Mycat_plus官方群】344764947](https://jq.qq.com/?_wv=1027&k=5sZhdgy) 
+## 欢迎加入Mycat_plus官方QQ群,别忘记star: 
+   [加入Mycat_plus官方群 344764947](https://jq.qq.com/?_wv=1027&k=5sZhdgy) 
