@@ -31,7 +31,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger; import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.mycat.backend.BackendConnection;
 import io.mycat.backend.mysql.PacketUtil;
@@ -47,14 +48,14 @@ import io.mycat.util.StringUtil;
 /**
  * @author mycat
  */
-public final class ShowVariables
-{
-    private static final Logger LOGGER = LoggerFactory.getLogger(ShowVariables.class);
-    private static final int FIELD_COUNT = 2;
-    private static final ResultSetHeaderPacket header = PacketUtil.getHeader(FIELD_COUNT);
-    private static final FieldPacket[] fields = new FieldPacket[FIELD_COUNT];
-    private static final EOFPacket eof = new EOFPacket();
-    private static final    Pattern pattern = Pattern.compile("(?:like|=)\\s*'([^']*(?:\\w+)+[^']*)+'",Pattern.CASE_INSENSITIVE);
+public final class ShowVariables {
+    private static final Logger                LOGGER      = LoggerFactory.getLogger(ShowVariables.class);
+    private static final int                   FIELD_COUNT = 2;
+    private static final ResultSetHeaderPacket header      = PacketUtil.getHeader(FIELD_COUNT);
+    private static final FieldPacket[]         fields      = new FieldPacket[FIELD_COUNT];
+    private static final EOFPacket             eof         = new EOFPacket();
+    private static final Pattern               pattern     = Pattern.compile("(?:like|=)\\s*'([^']*(?:\\w+)+[^']*)+'",
+        Pattern.CASE_INSENSITIVE);
     static {
         int i = 0;
         byte packetId = 0;
@@ -68,51 +69,47 @@ public final class ShowVariables
 
         eof.packetId = ++packetId;
     }
-    private static List<String> parseVariable(String sql)
-    {
-        List<String> variableList=new ArrayList<>();
+
+    private static List<String> parseVariable(String sql) {
+        List<String> variableList = new ArrayList<>();
         Matcher matcher = pattern.matcher(sql);
-        while (matcher.find())
-        {
+        while (matcher.find()) {
             variableList.add(matcher.group(1));
         }
         return variableList;
     }
+
     public static void execute(ServerConnection c, String sql) {
         ByteBuffer buffer = c.allocate();
 
         // write header
-        buffer = header.write(buffer, c,true);
+        buffer = header.write(buffer, c, true);
 
         // write fields
         for (FieldPacket field : fields) {
-            buffer = field.write(buffer, c,true);
+            buffer = field.write(buffer, c, true);
         }
 
         // write eof
-        buffer = eof.write(buffer, c,true);
+        buffer = eof.write(buffer, c, true);
 
         // write rows
         byte packetId = eof.packetId;
 
-        List<String> variableList= parseVariable(sql);
-        for (String key : variableList)
-        {
-          String value=  variables.get(key)  ;
-            if(value!=null)
-            {
+        List<String> variableList = parseVariable(sql);
+        for (String key : variableList) {
+            String value = variables.get(key);
+            if (value != null) {
                 RowDataPacket row = getRow(key, value, c.getCharset());
                 row.packetId = ++packetId;
-                buffer = row.write(buffer, c,true);
+                buffer = row.write(buffer, c, true);
             }
         }
-
-
 
         // write lastEof
         EOFPacket lastEof = new EOFPacket();
         lastEof.packetId = ++packetId;
-        buffer = lastEof.write(buffer, c,true);
+        buffer = lastEof.write(buffer, c, true);
 
         // write buffer
         c.write(buffer);
@@ -122,36 +119,31 @@ public final class ShowVariables
         ByteBuffer buffer = c.allocate();
 
         // write header
-        buffer = header.write(buffer, c,true);
+        buffer = header.write(buffer, c, true);
 
         // write fields
         for (FieldPacket field : fields) {
-            buffer = field.write(buffer, c,true);
+            buffer = field.write(buffer, c, true);
         }
 
         // write eof
-        buffer = eof.write(buffer, c,true);
+        buffer = eof.write(buffer, c, true);
 
         // write rows
         byte packetId = eof.packetId;
 
+        if (value != null) {
 
-
-            if(value!=null)
-            {
-
-                RowDataPacket row = new RowDataPacket(1);
-                row.add(StringUtil.encode(value, c.getCharset()));
-                row.packetId = ++packetId;
-                buffer = row.write(buffer, c,true);
-            }
-
-
+            RowDataPacket row = new RowDataPacket(1);
+            row.add(StringUtil.encode(value, c.getCharset()));
+            row.packetId = ++packetId;
+            buffer = row.write(buffer, c, true);
+        }
 
         // write lastEof
         EOFPacket lastEof = new EOFPacket();
         lastEof.packetId = ++packetId;
-        buffer = lastEof.write(buffer, c,true);
+        buffer = lastEof.write(buffer, c, true);
 
         // write buffer
         c.write(buffer);
@@ -184,15 +176,16 @@ public final class ShowVariables
         variables.put("tx_isolation", "REPEATABLE-READ");
         variables.put("wait_timeout", "172800");
     }
-    
-     public static void execute(ServerConnection sc, String orgin, BackendConnection jdbcConnection) {
+
+    public static void execute(ServerConnection sc, String orgin, BackendConnection jdbcConnection) {
         execute(sc, orgin);
         NonBlockingSession session = sc.getSession2();
         session.releaseConnectionIfSafe(jdbcConnection, LOGGER.isDebugEnabled(), false);
     }
-     public static void justReturnValue(ServerConnection sc, String orgin, BackendConnection jdbcConnection) {
-    	 justReturnValue(sc, orgin);
-         NonBlockingSession session = sc.getSession2();
-         session.releaseConnectionIfSafe(jdbcConnection, LOGGER.isDebugEnabled(), false);
-     }
+
+    public static void justReturnValue(ServerConnection sc, String orgin, BackendConnection jdbcConnection) {
+        justReturnValue(sc, orgin);
+        NonBlockingSession session = sc.getSession2();
+        session.releaseConnectionIfSafe(jdbcConnection, LOGGER.isDebugEnabled(), false);
+    }
 }

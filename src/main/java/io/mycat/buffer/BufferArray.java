@@ -16,111 +16,107 @@ import java.util.List;
  * @author zagnix
  */
 public class BufferArray {
-	private final BufferPool bufferPool;
-	private ByteBuffer curWritingBlock;
-	private List<ByteBuffer> writedBlockLst = Collections.emptyList();
+    private final BufferPool bufferPool;
+    private ByteBuffer       curWritingBlock;
+    private List<ByteBuffer> writedBlockLst = Collections.emptyList();
 
-	public BufferArray(BufferPool bufferPool) {
-		super();
-		this.bufferPool = bufferPool;
-		curWritingBlock = bufferPool.allocate(bufferPool.getChunkSize());
-	}
+    public BufferArray(BufferPool bufferPool) {
+        super();
+        this.bufferPool = bufferPool;
+        curWritingBlock = bufferPool.allocate(bufferPool.getChunkSize());
+    }
 
-	public ByteBuffer checkWriteBuffer(int capacity) {
-		if (capacity > curWritingBlock.remaining()) {
-			addtoBlock(curWritingBlock);
-			curWritingBlock = bufferPool.allocate(capacity);
-			return curWritingBlock;
-		} else {
-			return curWritingBlock;
-		}
-	}
+    public ByteBuffer checkWriteBuffer(int capacity) {
+        if (capacity > curWritingBlock.remaining()) {
+            addtoBlock(curWritingBlock);
+            curWritingBlock = bufferPool.allocate(capacity);
+            return curWritingBlock;
+        } else {
+            return curWritingBlock;
+        }
+    }
 
-	public int getBlockCount()
-	{
-		return writedBlockLst.size()+1;
-	}
-	private void addtoBlock(ByteBuffer buffer) {
-		if (writedBlockLst.isEmpty()) {
-			writedBlockLst = new LinkedList<ByteBuffer>();
-		}
-		writedBlockLst.add(buffer);
-	}
+    public int getBlockCount() {
+        return writedBlockLst.size() + 1;
+    }
 
-	public ByteBuffer getCurWritingBlock() {
-		return curWritingBlock;
-	}
+    private void addtoBlock(ByteBuffer buffer) {
+        if (writedBlockLst.isEmpty()) {
+            writedBlockLst = new LinkedList<ByteBuffer>();
+        }
+        writedBlockLst.add(buffer);
+    }
 
-	public List<ByteBuffer> getWritedBlockLst() {
-		return writedBlockLst;
-	}
+    public ByteBuffer getCurWritingBlock() {
+        return curWritingBlock;
+    }
 
-	public void clear() {
-		curWritingBlock = null;
-		writedBlockLst.clear();
-		writedBlockLst = null;
-	}
+    public List<ByteBuffer> getWritedBlockLst() {
+        return writedBlockLst;
+    }
 
-	public ByteBuffer write(byte[] src) {
-		int offset = 0;
-		int remains = src.length;
-		while (remains > 0) {
-			int writeable = curWritingBlock.remaining();
-			if (writeable >= remains) {
-				// can write whole srce
-				curWritingBlock.put(src, offset, remains);
-				break;
-			} else {
-				// can write partly
-				curWritingBlock.put(src, offset, writeable);
-				offset += writeable;
-				remains -= writeable;
-				addtoBlock(curWritingBlock);
-				curWritingBlock = bufferPool.allocate(bufferPool.getChunkSize());
-				continue;
-			}
-		}
-		return curWritingBlock;
-	}
+    public void clear() {
+        curWritingBlock = null;
+        writedBlockLst.clear();
+        writedBlockLst = null;
+    }
 
+    public ByteBuffer write(byte[] src) {
+        int offset = 0;
+        int remains = src.length;
+        while (remains > 0) {
+            int writeable = curWritingBlock.remaining();
+            if (writeable >= remains) {
+                // can write whole srce
+                curWritingBlock.put(src, offset, remains);
+                break;
+            } else {
+                // can write partly
+                curWritingBlock.put(src, offset, writeable);
+                offset += writeable;
+                remains -= writeable;
+                addtoBlock(curWritingBlock);
+                curWritingBlock = bufferPool.allocate(bufferPool.getChunkSize());
+                continue;
+            }
+        }
+        return curWritingBlock;
+    }
 
     public byte[] writeToByteArrayAndRecycle() {
-        BufferArray bufferArray=this;
+        BufferArray bufferArray = this;
         try {
 
-              int size=0;
+            int size = 0;
             List<ByteBuffer> blockes = bufferArray.getWritedBlockLst();
             if (!bufferArray.getWritedBlockLst().isEmpty()) {
                 for (ByteBuffer curBuf : blockes) {
                     curBuf.flip();
-                    size+=curBuf.remaining();
+                    size += curBuf.remaining();
                 }
             }
             ByteBuffer curBuf = bufferArray.getCurWritingBlock();
             curBuf.flip();
-            if(curBuf.hasRemaining())
-            {
+            if (curBuf.hasRemaining()) {
                 size += curBuf.remaining();
             }
-            if(size>0)
-            {
-                int offset=0;
-                byte[] all=new byte[size];
+            if (size > 0) {
+                int offset = 0;
+                byte[] all = new byte[size];
                 if (!bufferArray.getWritedBlockLst().isEmpty()) {
                     for (ByteBuffer tBuf : blockes) {
 
-                        ByteBufferUtil.arrayCopy(tBuf,0,all,offset,tBuf.remaining());
-                        offset+=tBuf.remaining();
+                        ByteBufferUtil.arrayCopy(tBuf, 0, all, offset, tBuf.remaining());
+                        offset += tBuf.remaining();
 
                         bufferPool.recycle(tBuf);
                     }
                 }
                 ByteBuffer tBuf = bufferArray.getCurWritingBlock();
-                if(tBuf.hasRemaining())
-                {
-                    ByteBufferUtil.arrayCopy(tBuf,0,all,offset,tBuf.remaining());
+                if (tBuf.hasRemaining()) {
+                    ByteBufferUtil.arrayCopy(tBuf, 0, all, offset, tBuf.remaining());
                     bufferPool.recycle(tBuf);
-                   // offset += curBuf.remaining();
+                    // offset += curBuf.remaining();
                 }
                 return all;
             }
@@ -130,9 +126,9 @@ public class BufferArray {
             bufferArray.clear();
         }
 
-      return EMPTY;
+        return EMPTY;
     }
 
-    private static byte[] EMPTY=new byte[0];
+    private static byte[] EMPTY = new byte[0];
 
 }
