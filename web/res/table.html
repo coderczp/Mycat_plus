@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="/res/css/bootstrap.min.css" rel="stylesheet">
+<link href="/res/css/bootstrap-modal.min.css" rel="stylesheet">
+<link href="/res/css/jquery-date.css" rel="stylesheet">
+<link href="/res/css/bootstrap-select.min.css" rel="stylesheet">
+
+<script src="/res/js/jquery.min.js"></script>
+<script src="/res/js/bootstrap.min.js"></script>
+<script src="/res/js/jstree.js"></script>
+<script src="/res/js/dts.js"></script>
+<script src="/res/js/jquery-date.js"></script>
+<script src="/res/js/bootstrap-select.min.js"></script>
+<script src="/res/js/bootstrap-modal.pack.min.js"></script>
+
+<title>Mysql-sharding</title>
+</head>
+<body>
+	<nav class="navbar navbar-inverse" role="navigation" id="dtsNav">
+	</nav>
+	<div class="container">
+		<div class="panel panel-success">
+			<div class="panel-heading">
+				<form class="form-inline" role="form">
+					<div class="form-group">
+						<select id="app" class="form-control selectpicker"
+							data-live-search="true"></select>
+					</div>
+					<div class="form-group">
+						<button class="btn btn-primary" id="queryBtn" type="button">Query</button>
+					</div>
+				</form>
+			</div>
+			<div class="panel-body">
+				<table class="table  table-hover">
+					<thead>
+						<tr>
+							<th>名称</th>
+							<th>主机</th>
+							<th>启动时间</th>
+							<th>扩展信息</th>
+							<th>修改配置</th>
+							<th>删除</th>
+						</tr>
+					</thead>
+					<tbody id="res">
+					</tbody>
+				</table>
+			</div>
+
+			<div class="modal fade" id="myModal" tabindex="-1" role="dialog"
+				aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="myModalLabel">服务配置</h5>
+						</div>
+						<div class="modal-body">
+							<form class="form" role="form" id="form">
+								<div class="form-group">
+									<label for="name">工程</label> <input name="name" id="name"
+										type="text" readonly="readonly"></input>
+								</div>
+								<div class="form-group">
+									<label for="enable">启用DTS</label> <input name="enable"
+										id="enable" type="checkbox"></input>
+								</div>
+								<div class="form-group">
+									<label for="printSql">打印SQL</label> <input name="printSql"
+										id="printSql" type="checkbox"></input>
+								</div>
+								<div class="form-group">
+									<label for="debug">开启Debug</label> <input name="debug"
+										id="debug" type="checkbox"></input>
+								</div>
+								<div class="form-group">
+									<label for="ext">扩展信息</label> <span id="ext"></span>
+								</div>
+							</form>
+						</div>
+						<div class="modal-footer">
+							<button class="btn" id="updateApp" type="button">提交</button>
+							<button type="button" class="btn btn-default"
+								data-dismiss="modal">关闭</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+	function tr(data) {
+		var id = data.id;
+		var host = data.host;
+		var app = data.name;
+		var ext = data.ext;
+		var start = Date.fromLong(data.startTime);
+
+		var del = HTML.a("/dts/api/app/del?id=" + id, "删除");
+		var update = HTML.ab("openEdit(" + JSON.toStr(data) + ")", "修改");
+
+		ext = parseDtsVer(ext);
+
+		var row = HTML.td(app) + HTML.td(host) + HTML.td(start) + HTML.td(ext)
+				+ HTML.td(update) + HTML.td(del);
+		return "<tr>" + row + "</tr>";
+	}
+
+	function parseDtsVer(ext) {
+		if (ext == '') {
+			return '';
+		}
+		var json = JSON.toJson(ext);
+		return DTS.substr(json['dts.version'], 50);
+	}
+
+	function query() {
+		$('#res').html('');
+		var app = $('#app').val();
+		var host = $('#host').val();
+
+		API.listApp(function(data) {
+			var html = "";
+			for ( var i in data) {
+				html += tr(data[i]);
+			}
+			$('#res').html(html);
+		}, app);
+	}
+
+	function openEdit(json) {
+		$('#id').val(json.id);
+		$('#ext').text(json.ext);
+		$('#name').val(json.name);
+		$('#debug').attr('checked', json.debug);
+		$('#enable').attr('checked', json.enable);
+		$('#prinSql').attr('checked', json.prinSql);
+		$('#myModal').modal('show');
+	}
+
+	function updateApp() {
+		var arg = $("#form").serializeObject();
+		arg.debug = $('#debug').is(':checked');
+		arg.enable = $('#enable').is(':checked');
+		arg.printSql = $('#prinSql').is(':checked');
+
+		if (arg.enable == false && !confirm("确定禁用DTS?")) {
+			return;
+		}
+		API.updateApp(arg, function(res) {
+			alert(res);
+			$('#myModal').modal('hide');
+		});
+	}
+
+	$(function() {
+		$('#queryBtn').click(query);
+		$('#updateApp').click(updateApp);
+		DTS.menus('#dtsNav');
+
+		$("#app").selectpicker({
+			noneSelectedText : '请选择工程'
+		});
+
+		//API.listApp(function(datas) {
+		//	HTML.select('#app', datas, 'name', 'name', true);
+		//});
+	});
+</script>
+</html>

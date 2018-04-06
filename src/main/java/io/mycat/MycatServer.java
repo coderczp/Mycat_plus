@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, OpenCloudDB/MyCAT and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, MyCat_Plus and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software;Designed and Developed mainly by many Chinese 
@@ -23,8 +23,6 @@
  */
 package io.mycat;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -42,12 +40,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -67,8 +62,6 @@ import io.mycat.buffer.NettyBufferPool;
 import io.mycat.cache.CacheService;
 import io.mycat.config.MycatConfig;
 import io.mycat.config.classloader.DynaClassLoader;
-import io.mycat.config.loader.zkprocess.comm.ZkConfig;
-import io.mycat.config.loader.zkprocess.comm.ZkParamCfg;
 import io.mycat.config.model.SchemaConfig;
 import io.mycat.config.model.SystemConfig;
 import io.mycat.config.model.TableConfig;
@@ -87,7 +80,6 @@ import io.mycat.net.SocketConnector;
 import io.mycat.route.MyCATSequnceProcessor;
 import io.mycat.route.RouteService;
 import io.mycat.route.factory.RouteStrategyFactory;
-import io.mycat.route.sequence.handler.SequenceHandler;
 import io.mycat.server.ServerConnectionFactory;
 import io.mycat.server.interceptor.SQLInterceptor;
 import io.mycat.server.interceptor.impl.GlobalTableUtil;
@@ -100,7 +92,6 @@ import io.mycat.statistic.stat.UserStatAnalyzer;
 import io.mycat.util.ExecutorUtil;
 import io.mycat.util.NameableExecutor;
 import io.mycat.util.TimeUtil;
-import io.mycat.util.ZKUtils;
 
 /**
  * @author mycat
@@ -135,8 +126,6 @@ public class MycatServer {
 
     //XA事务全局ID生成
     private final AtomicLong           xaIDInc                             = new AtomicLong();
-    //sequence处理对象
-    private SequenceHandler            sequenceHandler;
 
     /**
      * Mycat 内存管理类
@@ -159,7 +148,6 @@ public class MycatServer {
     private NameableExecutor               sequenceExecutor;
     private NameableExecutor               timerExecutor;
     private ListeningExecutorService       listeningExecutorService;
-    private InterProcessMutex              dnindexLock;
     private long                           totalNetWorkBufferSize = 0;
 
     private final AtomicBoolean            startup                = new AtomicBoolean(false);
@@ -206,10 +194,6 @@ public class MycatServer {
 
         //记录启动时间
         this.startupTime = TimeUtil.currentTimeMillis();
-        if (isUseZkSwitch()) {
-            String path = ZKUtils.getZKBasePath() + "lock/dnindex.lock";
-            dnindexLock = new InterProcessMutex(ZKUtils.getConnection(), path);
-        }
 
     }
 
@@ -295,12 +279,6 @@ public class MycatServer {
         return config;
     }
 
-    public void beforeStart() {
-        String home = SystemConfig.getHomePath();
-
-        //ZkConfig.instance().initZk();
-    }
-
     public void startup() throws IOException {
 
         SystemConfig system = config.getSystem();
@@ -336,8 +314,6 @@ public class MycatServer {
         short bufferPoolPageNumber = system.getBufferPoolPageNumber();
         //minimum allocation unit
         short bufferPoolChunkSize = system.getBufferPoolChunkSize();
-
-        int socketBufferLocalPercent = system.getProcessorBufferLocalPercent();
         int bufferPoolType = system.getProcessorBufferPoolType();
 
         switch (bufferPoolType) {
@@ -496,68 +472,11 @@ public class MycatServer {
         LOGGER.info("Perform XA recovery log ...");
         performXARecoveryLog();
 
-        if (isUseZkSwitch()) {
-            //首次启动如果发现zk上dnindex为空，则将本地初始化上zk
-            initZkDnindex();
-        }
-        initRuleData();
-
         startup.set(true);
     }
 
-    public void initRuleData() {
-        if (!isUseZk())
-            return;
-        InterProcessMutex ruleDataLock = null;
-        try {
-            File file = new File(SystemConfig.getHomePath(), "conf" + File.separator + "ruledata");
-            String path = ZKUtils.getZKBasePath() + "lock/ruledata.lock";
-            ruleDataLock = new InterProcessMutex(ZKUtils.getConnection(), path);
-            ruleDataLock.acquire(30, TimeUnit.SECONDS);
-            File[] childFiles = file.listFiles();
-            if (childFiles != null && childFiles.length > 0) {
-                String basePath = ZKUtils.getZKBasePath() + "ruledata/";
-                for (File childFile : childFiles) {
-                    CuratorFramework zk = ZKUtils.getConnection();
-                    if (zk.checkExists().forPath(basePath + childFile.getName()) == null) {
-                        zk.create().creatingParentsIfNeeded().forPath(basePath + childFile.getName(),
-                            Files.toByteArray(childFile));
-                    }
-                }
-            }
+    public void initRuleData() {}
 
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            try {
-                if (ruleDataLock != null)
-                    ruleDataLock.release();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    private void initZkDnindex() {
-        try {
-            File file = new File(SystemConfig.getHomePath(), "conf" + File.separator + "dnindex.properties");
-            dnindexLock.acquire(30, TimeUnit.SECONDS);
-            String path = ZKUtils.getZKBasePath() + "bindata/dnindex.properties";
-            CuratorFramework zk = ZKUtils.getConnection();
-            if (zk.checkExists().forPath(path) == null) {
-                zk.create().creatingParentsIfNeeded().forPath(path, Files.toByteArray(file));
-            }
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            try {
-                dnindexLock.release();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
 
     public void reloadDnIndex() {
         if (MycatServer.getInstance().getProcessors() == null)
@@ -705,30 +624,6 @@ public class MycatServer {
             fileOut = new FileOutputStream(file);
             dnIndexProperties.store(fileOut, "update");
 
-            if (isUseZkSwitch()) {
-                // save to  zk
-                try {
-                    dnindexLock.acquire(30, TimeUnit.SECONDS);
-                    String path = ZKUtils.getZKBasePath() + "bindata/dnindex.properties";
-                    CuratorFramework zk = ZKUtils.getConnection();
-                    if (zk.checkExists().forPath(path) == null) {
-                        zk.create().creatingParentsIfNeeded().forPath(path, Files.toByteArray(file));
-                    } else {
-                        byte[] data = zk.getData().forPath(path);
-                        ByteArrayOutputStream out = new ByteArrayOutputStream();
-                        Properties properties = new Properties();
-                        properties.load(new ByteArrayInputStream(data));
-                        if (!String.valueOf(curIndex).equals(properties.getProperty(dataHost))) {
-                            properties.setProperty(dataHost, String.valueOf(curIndex));
-                            properties.store(out, "update");
-                            zk.setData().forPath(path, out.toByteArray());
-                        }
-                    }
-
-                } finally {
-                    dnindexLock.release();
-                }
-            }
         } catch (Exception e) {
             LOGGER.warn("saveDataNodeIndex err:", e);
         } finally {
@@ -742,17 +637,6 @@ public class MycatServer {
 
     }
 
-    private boolean isUseZk() {
-        String loadZk = ZkConfig.getInstance().getValue(ZkParamCfg.ZK_CFG_FLAG);
-        return "true".equalsIgnoreCase(loadZk);
-    }
-
-    private boolean isUseZkSwitch() {
-        MycatConfig mycatConfig = config;
-        boolean isUseZkSwitch = mycatConfig.getSystem().isUseZKSwitch();
-        String loadZk = ZkConfig.getInstance().getValue(ZkParamCfg.ZK_CFG_FLAG);
-        return (isUseZkSwitch && "true".equalsIgnoreCase(loadZk));
-    }
 
     public RouteService getRouterService() {
         return routerService;
@@ -1011,16 +895,6 @@ public class MycatServer {
 
     public ListeningExecutorService getListeningExecutorService() {
         return listeningExecutorService;
-    }
-
-    public static void main(String[] args) throws Exception {
-        String path = ZKUtils.getZKBasePath() + "bindata";
-        CuratorFramework zk = ZKUtils.getConnection();
-        if (zk.checkExists().forPath(path) == null)
-            ;
-
-        byte[] data = zk.getData().forPath(path);
-        System.out.println(data.length);
     }
 
 }

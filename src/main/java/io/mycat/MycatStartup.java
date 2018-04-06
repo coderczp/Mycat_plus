@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, OpenCloudDB/MyCAT and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, MyCat_Plus and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software;Designed and Developed mainly by many Chinese 
@@ -29,33 +29,31 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.mycat.config.loader.zkprocess.comm.ZkConfig;
 import io.mycat.config.model.SystemConfig;
+import io.mycat.web.WebModule;
 
 /**
  * @author mycat
  */
 public final class MycatStartup {
+    
     private static final String dateFormat = "yyyy-MM-dd HH:mm:ss";
     private static final Logger LOGGER     = LoggerFactory.getLogger(MycatStartup.class);
 
     public static void main(String[] args) {
-        //use zk ?
-        ZkConfig.getInstance().initZk();
         try {
             String home = SystemConfig.getHomePath();
             if (home == null) {
                 System.out.println(SystemConfig.SYS_HOME + "  is not set.");
                 System.exit(-1);
             }
-            // init
             MycatServer server = MycatServer.getInstance();
-            server.beforeStart();
-
-            // startup
             server.startup();
             System.out.println("MyCAT Server startup successfully. see logs in logs/mycat.log");
 
+            WebModule m = new WebModule();
+            m.doStart(server);
+            
         } catch (Exception e) {
             SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
             LOGGER.error(sdf.format(new Date()) + " startup error", e);

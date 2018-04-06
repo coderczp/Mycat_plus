@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, OpenCloudDB/MyCAT and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, MyCat_Plus and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software;Designed and Developed mainly by many Chinese 
@@ -23,16 +23,25 @@
  */
 package io.mycat.manager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.mycat.config.ErrorCode;
-import io.mycat.manager.handler.*;
+import io.mycat.manager.handler.ClearHandler;
+import io.mycat.manager.handler.ConfFileHandler;
+import io.mycat.manager.handler.ReloadHandler;
+import io.mycat.manager.handler.RollbackHandler;
+import io.mycat.manager.handler.SelectHandler;
+import io.mycat.manager.handler.ShowHandler;
+import io.mycat.manager.handler.ShowServerLog;
+import io.mycat.manager.handler.StopHandler;
+import io.mycat.manager.handler.SwitchHandler;
 import io.mycat.manager.response.KillConnection;
 import io.mycat.manager.response.Offline;
 import io.mycat.manager.response.Online;
 import io.mycat.net.handler.FrontendQueryHandler;
 import io.mycat.net.mysql.OkPacket;
 import io.mycat.route.parser.ManagerParse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author mycat
@@ -97,9 +106,6 @@ public class ManagerQueryHandler implements FrontendQueryHandler {
                 break;
             case ManagerParse.LOGFILE:
                 ShowServerLog.handle(sql, c);
-                break;
-            case ManagerParse.ZK:
-                ZKHandler.handle(sql, c, rs >>> SHIFT);
                 break;
             default:
                 c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement");

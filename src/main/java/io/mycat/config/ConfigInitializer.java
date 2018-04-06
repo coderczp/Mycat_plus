@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, OpenCloudDB/MyCAT and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, MyCat_Plus and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software;Designed and Developed mainly by many Chinese
@@ -40,8 +40,6 @@ import io.mycat.config.loader.ConfigLoader;
 import io.mycat.config.loader.SchemaLoader;
 import io.mycat.config.loader.xml.XMLConfigLoader;
 import io.mycat.config.loader.xml.XMLSchemaLoader;
-import io.mycat.config.loader.zkprocess.comm.ZkConfig;
-import io.mycat.config.loader.zkprocess.comm.ZkParamCfg;
 import io.mycat.config.model.DBHostConfig;
 import io.mycat.config.model.DataHostConfig;
 import io.mycat.config.model.DataNodeConfig;
@@ -50,10 +48,8 @@ import io.mycat.config.model.SchemaConfig;
 import io.mycat.config.model.SystemConfig;
 import io.mycat.config.model.UserConfig;
 import io.mycat.config.util.ConfigException;
-import io.mycat.route.sequence.handler.DistributedSequenceHandler;
 import io.mycat.route.sequence.handler.IncrSequenceMySQLHandler;
 import io.mycat.route.sequence.handler.IncrSequenceTimeHandler;
-import io.mycat.route.sequence.handler.IncrSequenceZKHandler;
 
 /**
  * @author mycat
@@ -103,15 +99,6 @@ public class ConfigInitializer {
         if (system.getSequnceHandlerType() == SystemConfig.SEQUENCEHANDLER_LOCAL_TIME) {
             IncrSequenceTimeHandler.getInstance().load();
         }
-
-        if (system.getSequnceHandlerType() == SystemConfig.SEQUENCEHANDLER_ZK_DISTRIBUTED) {
-            DistributedSequenceHandler.getInstance(system).load();
-        }
-
-        if (system.getSequnceHandlerType() == SystemConfig.SEQUENCEHANDLER_ZK_GLOBAL_INCREMENT) {
-            IncrSequenceZKHandler.getInstance().load();
-        }
-
         /**
          * 配置文件初始化， 自检
          */
@@ -252,13 +239,9 @@ public class ConfigInitializer {
 
     private Map<String, PhysicalDBPool> initDataHosts(ConfigLoader configLoader) {
         Map<String, DataHostConfig> nodeConfs = configLoader.getDataHosts();
-        boolean isBooster = "booster".equalsIgnoreCase(ZkConfig.getInstance().getValue(ZkParamCfg.MYCAT_SERVER_TYPE));
         //根据DataHost建立PhysicalDBPool，其实就是实际数据库连接池，每个DataHost对应一个PhysicalDBPool
         Map<String, PhysicalDBPool> nodes = new HashMap<String, PhysicalDBPool>(nodeConfs.size());
         for (DataHostConfig conf : nodeConfs.values()) {
-            if (isBooster) {
-                conf.setMinCon(2);
-            }
             //建立PhysicalDBPool
             PhysicalDBPool pool = getPhysicalDBPool(conf, configLoader);
             nodes.put(pool.getHostName(), pool);
