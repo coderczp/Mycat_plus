@@ -45,7 +45,7 @@ public class WebModule {
     private int                 webPort;
     private Server              server      = new Server();
 
-    private static final String SPRING_FILE = "classpath:spring.xml";
+    private static final String SPRING_FILE = "classpath:spring/spring.xml";
     private static final Logger LOG         = LoggerFactory.getLogger(WebModule.class);
 
     public WebModule() {

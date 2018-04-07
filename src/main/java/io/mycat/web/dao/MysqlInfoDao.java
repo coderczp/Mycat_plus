@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, MyCat_Plus and/or its affiliates. All rights reserved.
+ * Copyright (c) 2018, MyCat_Plus and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software;Designed and Developed mainly by many Chinese 
@@ -21,30 +21,36 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.cache.impl;
 
-import java.util.concurrent.TimeUnit;
+package io.mycat.web.dao;
 
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.HTreeMap;
+import java.util.List;
 
-import io.mycat.cache.CachePool;
-import io.mycat.cache.CachePoolFactory;
+import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Select;
 
-public class MapDBCachePooFactory extends CachePoolFactory {
-	private DB db = DBMaker.newMemoryDirectDB().cacheSize(1000).cacheLRUEnable().make();
+import io.mycat.web.bean.MysqlInfo;
 
-	@Override
-	public CachePool createCachePool(String poolName, int cacheSize,
-			int expiredSeconds) {
+/**
+ * @author jeff.cao
+ * @version 0.0.1, 2018年4月6日 下午8:40:14 
+ */
+public interface MysqlInfoDao {
 
-		HTreeMap<Object, Object> cache = this.db.createHashMap(poolName)
-				.expireMaxSize(cacheSize)
-				.expireAfterAccess(expiredSeconds, TimeUnit.SECONDS)
-				.makeOrGet();
-		return new MapDBCachePool(cache, cacheSize);
+    @Select("select * from mysql_info")
+    List<MysqlInfo> list(MysqlInfo param);
 
-	}
+    @Select("select * from mysql_info where pid=#{pid}")
+    List<MysqlInfo> querySlaves(MysqlInfo param);
 
+    @Select("select * from mysql_info where id=#{id}")
+    MysqlInfo get(MysqlInfo param);
+
+    @Insert("insert into mysql_info(`pid`,`name`,`host`,`port`,`user`,`password`,`type`)"
+            + "values(#{pid},#{name},#{host},#{port},#{user},#{password},#{type})")
+    int add(MysqlInfo param);
+
+    @Delete("delete from mysql_info where id=#{id}")
+    int del(MysqlInfo param);
 }

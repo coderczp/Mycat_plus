@@ -22,21 +22,65 @@
  *
  */
 
-package io.mycat.web;
+package io.mycat.web.bean;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
+import java.util.Date;
 
 /**
- * home
+ * 逻辑库
  * @author jeff.cao
- * @version 0.0.1, 2018年4月5日 下午11:45:39 
+ * @version 0.0.1, 2018年4月7日 下午8:45:06 
  */
-@Controller
-public class HomeController {
+public class DatabaseInfo {
 
-    @RequestMapping("/")
-    public String home() {
-        return "res/index.html";
+    private Integer id;
+
+    private String  logicdb;
+
+    private String  physicsdb;
+
+    private Date    createTime;
+
+    private String  mysqlInfoName;
+
+    public String getMysqlInfoName() {
+        return mysqlInfoName;
     }
+
+    public void setMysqlInfoName(String mysqlInfoName) {
+        this.mysqlInfoName = mysqlInfoName;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getLogicdb() {
+        return logicdb;
+    }
+
+    public void setLogicdb(String logicdb) {
+        this.logicdb = logicdb;
+    }
+
+    public String getPhysicsdb() {
+        return physicsdb;
+    }
+
+    public void setPhysicsdb(String physicsdb) {
+        this.physicsdb = physicsdb;
+    }
+
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
+
 }

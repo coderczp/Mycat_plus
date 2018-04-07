@@ -19,18 +19,18 @@
 <title>Mysql-sharding</title>
 </head>
 <body>
-	<nav class="navbar navbar-inverse" role="navigation" id="dtsNav">
-	</nav>
+	<nav class="navbar navbar-inverse" role="navigation" id="dtsNav"></nav>
 	<div class="container">
 		<div class="panel panel-success">
 			<div class="panel-heading">
 				<form class="form-inline" role="form">
-					<div class="form-group">
-						<select id="app" class="form-control selectpicker"
-							data-live-search="true"></select>
+					<div class="input-group form-group">
+						<input name="xname" id="xname" type="text" class="form-control" placeholder="名称"></input>
 					</div>
-					<div class="form-group">
-						<button class="btn btn-primary" id="queryBtn" type="button">Query</button>
+					<div class="input-group form-group">
+						<button class="btn btn-primary" id="queryBtn" type="button">搜索</button>
+						&nbsp;
+						<button class="btn btn-primary" id="addBtn" type="button">添加</button>
 					</div>
 				</form>
 			</div>
@@ -38,12 +38,32 @@
 				<table class="table  table-hover">
 					<thead>
 						<tr>
+							<td colspan="11">
+								<div class="alert alert-warning">
+									类型为
+									<strong>slave</strong>
+									才有
+									<strong>MasterId</strong>
+									,表示该
+									<strong>slave</strong>
+									为对应
+									<strong>Master</strong>
+									的从库,请确认数据库主从配置正确
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<th>ID</th>
+							<th>MasterId</th>
 							<th>名称</th>
+							<th>类型</th>
 							<th>主机</th>
-							<th>启动时间</th>
-							<th>扩展信息</th>
-							<th>修改配置</th>
+							<th>端口</th>
+							<th>用户</th>
+							<th>创建时间</th>
 							<th>删除</th>
+							<th>修改</th>
+							<th>主从管理</th>
 						</tr>
 					</thead>
 					<tbody id="res">
@@ -51,40 +71,47 @@
 				</table>
 			</div>
 
-			<div class="modal fade" id="myModal" tabindex="-1" role="dialog"
-				aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 				<div class="modal-dialog">
 					<div class="modal-content">
 						<div class="modal-header">
-							<h5 class="modal-title" id="myModalLabel">服务配置</h5>
+							<h5 class="modal-title" id="myModalLabel">Mysql配置</h5>
 						</div>
 						<div class="modal-body">
 							<form class="form" role="form" id="form">
-								<div class="form-group">
-									<label for="name">工程</label> <input name="name" id="name"
-										type="text" readonly="readonly"></input>
+								<div class="input-group form-group">
+									<span class="input-group-addon">名称</span>
+									<input name="name" id="name" type="text" class="form-control"></input>
 								</div>
-								<div class="form-group">
-									<label for="enable">启用DTS</label> <input name="enable"
-										id="enable" type="checkbox"></input>
+								<div class="input-group form-group">
+									<span class="input-group-addon">主机</span>
+									<input name="host" id="host" type="text" class="form-control"></input>
 								</div>
-								<div class="form-group">
-									<label for="printSql">打印SQL</label> <input name="printSql"
-										id="printSql" type="checkbox"></input>
+								<div class="input-group form-group">
+									<span class="input-group-addon">端口</span>
+									<input name="port" id="port" type="text" class="form-control"></input>
 								</div>
-								<div class="form-group">
-									<label for="debug">开启Debug</label> <input name="debug"
-										id="debug" type="checkbox"></input>
+								<div class="input-group form-group">
+									<span class="input-group-addon">账号</span>
+									<input name="user" id="user" type="text" class="form-control"></input>
 								</div>
-								<div class="form-group">
-									<label for="ext">扩展信息</label> <span id="ext"></span>
+								<div class="input-group form-group">
+									<span class="input-group-addon">密码</span>
+									<input name="password" id="password" type="password" class="form-control"></input>
+								</div>
+								<div class="input-group form-group">
+									<span class="input-group-addon">类型</span>
+									<input name="type" id="type" type="text" readonly="readonly" class="form-control"></input>
+								</div>
+								<div class="input-group form-group">
+									<span class="input-group-addon">MasterId</span>
+									<input name="pid" id="pid" type="text" readonly="readonly" class="form-control"></input>
 								</div>
 							</form>
 						</div>
 						<div class="modal-footer">
 							<button class="btn" id="updateApp" type="button">提交</button>
-							<button type="button" class="btn btn-default"
-								data-dismiss="modal">关闭</button>
+							<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
 						</div>
 					</div>
 				</div>
@@ -93,82 +120,79 @@
 	</div>
 </body>
 <script type="text/javascript">
+	var mysqlAPI = new API('mysql');
+
 	function tr(data) {
 		var id = data.id;
+		var name = data.name;
 		var host = data.host;
-		var app = data.name;
-		var ext = data.ext;
-		var start = Date.fromLong(data.startTime);
+		var port = data.port;
+		var user = data.user;
+		var pid = data.pid;
+		var type = data.type;
+		var start = Date.fromLong(data.createTime);
 
-		var del = HTML.a("/dts/api/app/del?id=" + id, "删除");
+		var masterId = pid || '--';
+		var del = HTML.a("/api/mysql/del?id=" + id, "删除");
+		var salve = HTML.ab("openSlave(" + id + ")", "添加Slave");
 		var update = HTML.ab("openEdit(" + JSON.toStr(data) + ")", "修改");
-
-		ext = parseDtsVer(ext);
-
-		var row = HTML.td(app) + HTML.td(host) + HTML.td(start) + HTML.td(ext)
-				+ HTML.td(update) + HTML.td(del);
+		var row = HTML.td(id) + HTML.td(masterId) + HTML.td(name)
+				+ HTML.td(type) + HTML.td(host) + HTML.td(port) + HTML.td(user)
+				+ HTML.td(start) + HTML.td(del) + HTML.td(update)
+				+ HTML.td(salve);
 		return "<tr>" + row + "</tr>";
-	}
-
-	function parseDtsVer(ext) {
-		if (ext == '') {
-			return '';
-		}
-		var json = JSON.toJson(ext);
-		return DTS.substr(json['dts.version'], 50);
 	}
 
 	function query() {
 		$('#res').html('');
 		var app = $('#app').val();
-		var host = $('#host').val();
+		mysqlAPI.list({
+			"name" : app
+		}, showResponse);
+	}
 
-		API.listApp(function(data) {
-			var html = "";
-			for ( var i in data) {
-				html += tr(data[i]);
-			}
-			$('#res').html(html);
-		}, app);
+	function showResponse(data) {
+		var html = "";
+		for ( var i in data) {
+			html += tr(data[i]);
+		}
+		$('#res').html(html);
 	}
 
 	function openEdit(json) {
-		$('#id').val(json.id);
-		$('#ext').text(json.ext);
-		$('#name').val(json.name);
-		$('#debug').attr('checked', json.debug);
-		$('#enable').attr('checked', json.enable);
-		$('#prinSql').attr('checked', json.prinSql);
+		$("#form").bindForm(json);
 		$('#myModal').modal('show');
 	}
 
-	function updateApp() {
+	function addMqlInfo() {
 		var arg = $("#form").serializeObject();
-		arg.debug = $('#debug').is(':checked');
-		arg.enable = $('#enable').is(':checked');
-		arg.printSql = $('#prinSql').is(':checked');
-
-		if (arg.enable == false && !confirm("确定禁用DTS?")) {
-			return;
+		if (arg.type == 'slave' && !arg.pid) {
+			alert('Slave必须选择Master节点,如果没有Master,请先添加');
+			return false;
 		}
-		API.updateApp(arg, function(res) {
-			alert(res);
+		mysqlAPI.add(arg, function(x) {
+			alert(x);
 			$('#myModal').modal('hide');
 		});
 	}
 
+	function openSlave(masterId) {
+		$('#type').val('slave');
+		$('#pid').val(masterId);
+		$('#myModal').modal('show');
+	}
+
+	function openAddPannel() {
+		$('#type').val('master');
+		$('#myModal').modal('show');
+	}
+
 	$(function() {
 		$('#queryBtn').click(query);
-		$('#updateApp').click(updateApp);
+		$('#updateApp').click(addMqlInfo);
+		$('#addBtn').click(openAddPannel);
 		DTS.menus('#dtsNav');
-
-		$("#app").selectpicker({
-			noneSelectedText : '请选择工程'
-		});
-
-		//API.listApp(function(datas) {
-		//	HTML.select('#app', datas, 'name', 'name', true);
-		//});
+		query();
 	});
 </script>
 </html>

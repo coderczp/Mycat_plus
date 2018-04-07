@@ -22,10 +22,16 @@
  *
  */
 
-package io.mycat.web;
+package io.mycat.web.controller;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import io.mycat.web.bean.MysqlInfo;
+import io.mycat.web.dao.MysqlInfoDao;
 
 /**
  * API 
@@ -33,12 +39,27 @@ import org.springframework.web.bind.annotation.RestController;
  * @version 0.0.1, 2018年4月5日 下午11:45:39 
  */
 @RestController
-@RequestMapping("/api")
-public class APIController {
+public class MysqlController extends BaseController {
 
-    
-    @RequestMapping("/test")
-    public String test() {
-        return "ok";
+    @Autowired
+    private MysqlInfoDao infoDao;
+
+    @RequestMapping(value = "/mysql/list")
+    public List<MysqlInfo> list(MysqlInfo arg) {
+        List<MysqlInfo> list = infoDao.list(arg);
+        for (MysqlInfo mysqlInfo : list) {
+            mysqlInfo.setPassword("******");
+        }
+        return list;
+    }
+
+    @RequestMapping("/mysql/add")
+    public Object add(MysqlInfo arg) {
+        return infoDao.add(arg);
+    }
+
+    @RequestMapping("/mysql/del")
+    public Object del(MysqlInfo arg) {
+        return infoDao.del(arg);
     }
 }

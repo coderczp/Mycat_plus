@@ -111,3 +111,6 @@ hs_err_pid*
 /RUNNING_PID
 .DS_Store
 /target/
+/leveldb/
+/h2/
+/datanode/

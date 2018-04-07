@@ -44,6 +44,16 @@ jQuery.fn.serializeObject = function() {
     return o;
 };
 
+jQuery.fn.bindForm = function(data) {
+    this.find('input,select').each(function(i,item){
+    	var name = item['name'];
+    	var val = data[name];
+    	item['value']=val||'';
+    	
+    });
+};
+
+
 
 Date.fromLong = function(val){ 
 	return new Date(val).Format('MM-dd hh:mm:ss');
@@ -73,6 +83,9 @@ var HTML = {
 	span : function(text){	
 		return "<span>"+ text + "</span>";
 	},
+	pwd : function(text){	
+		return "<span>.....</span>";
+	},
 	ta:function(label,row,col,val){
 		return label+"<textarea rows='"+row+"' cols='"+col+"'>" + val+ "</textarea>";
 	},
@@ -89,7 +102,7 @@ var HTML = {
 	option:function(val,text){
 		return "<option value='"+val+"'>" + text+ "</option>";
 	},
-	select:function(id,datas,key,val,isAddAll){
+	select:function(id,datas,val,label,isAddAll){
 		var select = $(id);
 		if(isAddAll){
 			select.append(HTML.option('','---ALL--'));
@@ -97,15 +110,13 @@ var HTML = {
 		var uniq = {};
 		for (var i = 0; i < datas.length; i++) {
 			var app = datas[i];
-			var keys = app[key];
+			var text = app[label];
 			var vals = app[val];
-			if(uniq[keys]){
-				// 去重
+			if(uniq[text]){
 				continue;
 			}
-			uniq[keys] = true;
-			
-			select.append(HTML.option(keys,vals));
+			uniq[text] = true;
+			select.append(HTML.option(vals,text));
 		}
 		select.selectpicker('val', '');
 		select.selectpicker('refresh');
@@ -124,8 +135,9 @@ var DTS = {
 			'<div>'+
 				'<ul class="nav navbar-nav">'+
 					'<li class="active"><a href="/">Mysql-sharding</a></li>'+
-					'<li><a href="/res/mysql.html">Mysql配置</a></li>'+
-					'<li><a href="/res/db.html">Database管理</a></li>'+
+					'<li><a href="/res/mysql.html">物理主机配置</a></li>'+
+					'<li><a href="/res/db.html">逻辑主机管理</a></li>'+
+					'<li><a href="/res/db.html">分片管理</a></li>'+
 					'<li><a href="/res/table.html">Table管理</a></li>'+
 				'</ul>'+
 			'</div>'+
@@ -137,96 +149,27 @@ var DTS = {
     		return str;
     	return str.substr(0,len)+"...";
     },
-    subsuf:function(str,len){
-    	if(!str ||str.length<=len)
-    		return str;
-    	return "..."+str.substr(str.length-len);
-    },
-    spanDetail:function(eId,info){
-    		var html = "";
-    		var data = info.span;
-    		var args = info.args;
-    		html += HTML.li("追踪ID", data.traceId);
-    		html += HTML.li("时间", Date.fromLong(info.time));
-
-    		var pid = data.pid;
-    		if (pid && pid != 'null') {
-    			var pa = HTML.a("./span.html?spanId=" + pid, pid);
-    			html += HTML.li("父ID", pa);
-    		}
-    		html += HTML.li("主机", data.host);
-    		html += HTML.li("工程", data.app);
-    		html += HTML.li("方法", data.method);
-    		html += HTML.li("耗时(ms)", data.duration);
-
-    		if (args && args != 'null') {
-    			html += HTML.li("参数",args);
-    		} else {
-    			html += HTML.li("参数", '未埋点');
-    		}
-    		var mdc = info.mdc;
-    		if(mdc.indexOf('stack')>-1){
-    			html += HTML.li("扩展信息", HTML.code(mdc));
-    		}else{
-    			html += HTML.li("扩展信息", mdc);
-    		}
-    		
-    		var err = info.error;
-    		if (err && err != 'null') {
-    			html += HTML.code(info.error);
-    		}
-    		$(eId).html(html);
-    }
 };
 
-var API = {
-	navSearch:function(){
-		var tid = $('#sTraceId').val();
-		if(tid){
-			window.open('./chain.html?tid='+tid);
-		}
-	},	
-	query:function(arg,callback){
-		$.get('/dts/api/list', arg, callback);
-	},
-	chain:function(tid,callback){
-		$.get('/dts/api/span/chain', {
-			"traceId" : tid,
-		}, callback);
-	},
-	get:function(spanId,callback){
-		$.get('/dts/api/span/get',{
-			"spanId":spanId
-		},callback);
-	},
-	listRule:function(callback,app,host,group){
-		var arg = {"app":app,"host":host};
-		if(group=='name'){
-			arg.group=1;
-		}else if(group=='name'){
-			arg.group=0;
-		}
-		$.get('/dts/api/rule/list',arg,callback);
-	},
-	updateRule:function(arg,callback){
-		$.get('/dts/api/rule/update', arg, callback);
-	},
-	listApp:function(callback,app,host,group){
-		var arg = {"name":app,"host":host};
-		if(group=='name'){
-			arg.group=1;
-		}else if(group=='name'){
-			arg.group=0;
-		}
-		$.get('/dts/api/app/list',arg,callback);
-	},
-	listHost:function(callback){
-		$.get('/dts/api/app/list',{"group":0},callback);
-	},
-	statistics:function(arg,callback){
-		$.get('/dts/api/method/statistics', arg, callback);
-	},
-	updateApp:function(arg,callback){
-		$.get('/dts/api/app/update', arg, callback);
-	},
-	}
+// class API
+function API(path){
+	
+  var base_url = '/api';
+   
+   this.add = function(json,callback){
+	   $.get(base_url+'/'+path+'/add', json, callback);
+   };
+   
+   this.del = function(json,callback){
+	   $.get(base_url+'/'+path+'/del', json, callback);
+   };
+   
+   this.list = function(json,callback){
+	   $.get(base_url+'/'+path+'/list', json, callback);
+   };
+   
+   this.update = function(json,callback){
+	   $.get(base_url+'/'+path+'/update', json, callback);
+   };
+   
+}
