@@ -22,10 +22,10 @@ import com.google.common.base.Strings;
 import io.mycat.cache.LayerCachePool;
 import io.mycat.config.model.SchemaConfig;
 import io.mycat.config.model.SystemConfig;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.route.*;
 import io.mycat.route.factory.RouteStrategyFactory;
-import io.mycat.server.ServerConnection;
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
 
 /**
  * 处理注释中 类型为sql的情况 （按照 注释中的sql做路由解析，而不是实际的sql）
@@ -40,7 +40,7 @@ public class HintSQLHandler implements HintHandler {
 
 	@Override
 	public RouteResultset route(SystemConfig sysConfig, SchemaConfig schema,
-			int sqlType, String realSQL, String charset, ServerConnection sc,
+			int sqlType, String realSQL, String charset, ClientConn sc,
 			LayerCachePool cachePool, String hintSQLValue,int hintSqlType, Map hintMap)
             throws SQLNonTransientException {
 		
@@ -58,7 +58,7 @@ public class HintSQLHandler implements HintHandler {
 		rrs.setNodes(newRrsNodes);
 
 		// 判断是否为调用存储过程的SQL语句，这里不能用SQL解析器来解析判断是否为CALL语句
-		if (ServerParse.CALL == sqlType) {
+		if (SQLHandler.Type.CALL == sqlType) {
 			rrs.setCallStatement(true);
 
              Procedure procedure=parseProcedure(realSQL,hintMap);

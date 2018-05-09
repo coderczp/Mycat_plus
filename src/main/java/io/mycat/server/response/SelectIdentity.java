@@ -31,8 +31,8 @@ import io.mycat.net.mysql.EOFPacket;
 import io.mycat.net.mysql.FieldPacket;
 import io.mycat.net.mysql.ResultSetHeaderPacket;
 import io.mycat.net.mysql.RowDataPacket;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.route.parser.util.ParseUtil;
-import io.mycat.server.ServerConnection;
 import io.mycat.util.LongUtil;
 
 /**
@@ -47,7 +47,7 @@ public class SelectIdentity {
         header.packetId = ++packetId;
     }
 
-    public static void response(ServerConnection c, String stmt, int aliasIndex, final String orgName) {
+    public static void response(ClientConn c, String stmt, int aliasIndex, final String orgName) {
         String alias = ParseUtil.parseAlias(stmt, aliasIndex);
         if (alias == null) {
             alias = orgName;

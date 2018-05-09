@@ -27,8 +27,8 @@ import java.util.Map;
 
 import io.mycat.MycatServer;
 import io.mycat.backend.datasource.PhysicalDBPool;
-import io.mycat.manager.ManagerConnection;
 import io.mycat.net.mysql.OkPacket;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.route.parser.ManagerParseSwitch;
 import io.mycat.route.parser.util.Pair;
 
@@ -39,7 +39,7 @@ import io.mycat.route.parser.util.Pair;
  */
 public final class SwitchDataSource {
 
-    public static void response(String stmt, ManagerConnection c) {
+    public static void response(String stmt, ClientConn c) {
         int count = 0;
         Pair<String[], Integer> pair = ManagerParseSwitch.getPair(stmt);
         Map<String, PhysicalDBPool> dns = MycatServer.getInstance().getConfig().getDataHosts();

@@ -27,7 +27,7 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
 import io.mycat.sqlengine.mpp.LoadData;
 
 /**
@@ -68,7 +68,7 @@ public final class RouteResultsetNode implements Serializable , Comparable<Route
 		this.sqlType = sqlType;
 		this.srcStatement = srcStatement;
 		this.statement = srcStatement;
-		canRunInReadDB = (sqlType == ServerParse.SELECT || sqlType == ServerParse.SHOW);
+		canRunInReadDB = (sqlType == SQLHandler.Type.SELECT || sqlType == SQLHandler.Type.SHOW);
 		hasBlanceFlag = (statement != null)
 				&& statement.startsWith("/*balance*/");
 	}
@@ -78,7 +78,7 @@ public final class RouteResultsetNode implements Serializable , Comparable<Route
 	}
 	public boolean isUpdateSql() {
 		int type=sqlType;
-		return ServerParse.INSERT==type||ServerParse.UPDATE==type||ServerParse.DELETE==type||ServerParse.DDL==type;
+		return SQLHandler.Type.INSERT==type||SQLHandler.Type.UPDATE==type||SQLHandler.Type.DELETE==type||SQLHandler.Type.DDL==type;
 	}
 	public void setRunOnSlave(Boolean runOnSlave) {
 		this.runOnSlave = runOnSlave;

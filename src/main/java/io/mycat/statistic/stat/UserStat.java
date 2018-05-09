@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import io.mycat.MycatServer;
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
 import io.mycat.statistic.SQLRecord;
 import io.mycat.statistic.SQLRecorder;
 
@@ -179,7 +179,7 @@ public class UserStat {
 			this.sqlHighStat.addSql(sql, executeTime, startTime, endTime);
 			
 			//记录SQL Select 返回超过 10000 行的 大结果集
-			if ( sqlType == ServerParse.SELECT && sqlRows > 10000 ) {
+			if ( sqlType == SQLHandler.Type.SELECT && sqlRows > 10000 ) {
 				this.sqlLargeStat.add(sql, sqlRows, executeTime, startTime, endTime);
 			}
 			

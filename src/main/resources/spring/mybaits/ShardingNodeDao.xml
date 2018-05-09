@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.mycat.web.dao.ShardingNodeDao">
+
+	<select id="list" resultType="io.mycat.web.bean.ShardingNode">
+		select * from sharding_node where 1=1
+		<if test="name !=null and name !=''">
+			and `name` like CONCAT('%',#{name},'%')
+		</if>
+		order by createTime desc
+	</select>
+
+	<select id="get" resultType="io.mycat.web.bean.ShardingNode">
+		select * from sharding_node where 1=1
+		<choose>
+			<when test="id != null and id!=0">
+				and `id`=#{id},
+			</when>
+			<when test="name !=null and name !=''">
+				and `name`=#{name}
+			</when>
+			<otherwise>
+				id=0,
+			</otherwise>
+		</choose>
+	</select>
+
+</mapper>

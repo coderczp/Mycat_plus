@@ -10,9 +10,9 @@ import io.mycat.backend.datasource.PhysicalDBNode;
 import io.mycat.cache.LayerCachePool;
 import io.mycat.config.model.SchemaConfig;
 import io.mycat.config.model.SystemConfig;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.route.RouteResultset;
 import io.mycat.route.util.RouterUtil;
-import io.mycat.server.ServerConnection;
 
 /**
  * 处理注释中类型为datanode 的情况
@@ -25,7 +25,7 @@ public class HintDataNodeHandler implements HintHandler {
 
 	@Override
 	public RouteResultset route(SystemConfig sysConfig, SchemaConfig schema, int sqlType, String realSQL,
-			String charset, ServerConnection sc, LayerCachePool cachePool, String hintSQLValue,int hintSqlType, Map hintMap)
+			String charset, ClientConn sc, LayerCachePool cachePool, String hintSQLValue,int hintSqlType, Map hintMap)
 					throws SQLNonTransientException {
 		
 		String stmt = realSQL;

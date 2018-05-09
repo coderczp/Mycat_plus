@@ -20,7 +20,8 @@ import io.mycat.route.RouteService;
 import io.mycat.route.RouteStrategy;
 import io.mycat.route.factory.RouteStrategyFactory;
 import io.mycat.route.util.RouterUtil;
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
+import io.mycat.server.parser.SimpleSqlParser;
 import junit.framework.Assert;
 
 public class DDLRouteTest {
@@ -58,7 +59,7 @@ public class DDLRouteTest {
 	        }
 	        int nodeSize  = dataNodes.size();
 
-	        int rs = ServerParse.parse(sql);
+	        int rs = SimpleSqlParser.parse(sql);
 	        int sqlType = rs & 0xff;
 	        RouteResultset rrs = routerService.route(new SystemConfig(), schema, sqlType, sql, "UTF-8", null);
 	        Assert.assertTrue("COMPANY".equals(tablename));
@@ -95,7 +96,7 @@ public class DDLRouteTest {
         }
         int nodeSize = dataNodes.size();
 
-        int rs = ServerParse.parse(sql);
+        int rs = SimpleSqlParser.parse(sql);
 		int sqlType = rs & 0xff;
         RouteResultset rrs = routerService.route(new SystemConfig(), schema, sqlType, sql, "UTF-8", null);
         Assert.assertTrue("COMPANY".equals(tablename));
@@ -113,7 +114,7 @@ public class DDLRouteTest {
         }
         nodeSize = dataNodes.size();
 
-        rs = ServerParse.parse(sql);
+        rs = SimpleSqlParser.parse(sql);
 		sqlType = rs & 0xff;
         rrs = routerService.route(new SystemConfig(), schema, sqlType, sql, "UTF-8", null);
         Assert.assertTrue("COMPANY".equals(tablename));
@@ -129,7 +130,7 @@ public class DDLRouteTest {
             dataNodes = tc.getDataNodes();
         }
         nodeSize = dataNodes.size();
-        rs = ServerParse.parse(sql);
+        rs = SimpleSqlParser.parse(sql);
 		sqlType = rs & 0xff;
         rrs = routerService.route(new SystemConfig(), schema, sqlType, sql, "UTF-8", null);
         Assert.assertTrue("COMPANY".equals(tablename));
@@ -145,7 +146,7 @@ public class DDLRouteTest {
             dataNodes = tc.getDataNodes();
         }
         nodeSize = dataNodes.size();
-        rs = ServerParse.parse(sql);
+        rs = SimpleSqlParser.parse(sql);
 		sqlType = rs & 0xff;
         rrs = routerService.route(new SystemConfig(), schema, sqlType, sql, "UTF-8", null);
         Assert.assertTrue("COMPANY".equals(tablename));
@@ -184,7 +185,7 @@ public class DDLRouteTest {
             nodeSize = 1;
         }
 
-        int rs = ServerParse.parse(sql);
+        int rs = SimpleSqlParser.parse(sql);
         int sqlType = rs & 0xff;
         RouteResultset rrs = routerService.route(new SystemConfig(), schema, sqlType, sql, "UTF-8", null);
         Assert.assertTrue("COMPANY".equals(tablename));
@@ -203,7 +204,7 @@ public class DDLRouteTest {
         if (nodeSize==0&& schema.getDataNode()!=null){
             nodeSize = 1;
         }
-        rs = ServerParse.parse(sql);
+        rs = SimpleSqlParser.parse(sql);
         sqlType = rs & 0xff;
         rrs = routerService.route(new SystemConfig(), schema, sqlType, sql, "UTF-8", null);
         Assert.assertTrue("COMPANY".equals(tablename));
@@ -222,7 +223,7 @@ public class DDLRouteTest {
         if (nodeSize==0&& schema.getDataNode()!=null){
             nodeSize = 1;
         }
-        rs = ServerParse.parse(sql);
+        rs = SimpleSqlParser.parse(sql);
         sqlType = rs & 0xff;
         rrs = routerService.route(new SystemConfig(), schema, sqlType, sql, "UTF-8", null);
         Assert.assertTrue("COMPANY".equals(tablename));
@@ -242,7 +243,7 @@ public class DDLRouteTest {
         if (nodeSize==0&& schema.getDataNode()!=null){
             nodeSize = 1;
         }
-        rs = ServerParse.parse(sql);
+        rs = SimpleSqlParser.parse(sql);
         sqlType = rs & 0xff;
         rrs = routerService.route(new SystemConfig(), schema, sqlType, sql, "UTF-8", null);
         Assert.assertTrue("COMPANY".equals(tablename));
@@ -263,7 +264,7 @@ public class DDLRouteTest {
             nodeSize = 1;
         }
 
-        rs = ServerParse.parse(sql);
+        rs = SimpleSqlParser.parse(sql);
         sqlType = rs & 0xff;
         rrs = routerService.route(new SystemConfig(), schema, sqlType, sql, "UTF-8", null);
         Assert.assertTrue("COMPANY".equals(tablename));
@@ -279,7 +280,7 @@ public class DDLRouteTest {
         final SchemaConfig schema = schemaMap.get("cndb");
 
         String sql = "desc offer";
-        RouteResultset rrs = routeStrategy.route(new SystemConfig(), schema, ServerParse.DESCRIBE, sql, null, null,
+        RouteResultset rrs = routeStrategy.route(new SystemConfig(), schema, SQLHandler.Type.DESCRIBE, sql, null, null,
                 cachePool);
         Assert.assertEquals(false, rrs.isCacheAble());
         Assert.assertEquals(-1L, rrs.getLimitSize());
@@ -289,7 +290,7 @@ public class DDLRouteTest {
         Assert.assertEquals("desc offer", rrs.getNodes()[0].getStatement());
 
         sql = " desc cndb.offer";
-        rrs = routeStrategy.route(new SystemConfig(), schema, ServerParse.DESCRIBE, sql, null, null, cachePool);
+        rrs = routeStrategy.route(new SystemConfig(), schema, SQLHandler.Type.DESCRIBE, sql, null, null, cachePool);
         Assert.assertEquals(false, rrs.isCacheAble());
         Assert.assertEquals(-1L, rrs.getLimitSize());
         Assert.assertEquals(1, rrs.getNodes().length);
@@ -298,7 +299,7 @@ public class DDLRouteTest {
         Assert.assertEquals("desc offer", rrs.getNodes()[0].getStatement());
 
         sql = " desc cndb.offer col1";
-        rrs = routeStrategy.route(new SystemConfig(), schema, ServerParse.DESCRIBE, sql, null, null, cachePool);
+        rrs = routeStrategy.route(new SystemConfig(), schema, SQLHandler.Type.DESCRIBE, sql, null, null, cachePool);
         Assert.assertEquals(false, rrs.isCacheAble());
         Assert.assertEquals(-1L, rrs.getLimitSize());
         Assert.assertEquals(1, rrs.getNodes().length);
@@ -307,7 +308,7 @@ public class DDLRouteTest {
         Assert.assertEquals("desc offer col1", rrs.getNodes()[0].getStatement());
 
         sql = "SHOW FULL COLUMNS FROM  offer  IN db_name WHERE true";
-        rrs = routeStrategy.route(new SystemConfig(), schema, ServerParse.SHOW, sql, null, null,
+        rrs = routeStrategy.route(new SystemConfig(), schema, SQLHandler.Type.SHOW, sql, null, null,
                 cachePool);
         Assert.assertEquals(false, rrs.isCacheAble());
         Assert.assertEquals(-1L, rrs.getLimitSize());
@@ -318,7 +319,7 @@ public class DDLRouteTest {
                 rrs.getNodes()[0].getStatement());
 
         sql = "SHOW FULL COLUMNS FROM  db.offer  IN db_name WHERE true";
-        rrs = routeStrategy.route(new SystemConfig(), schema, ServerParse.SHOW, sql, null, null,
+        rrs = routeStrategy.route(new SystemConfig(), schema, SQLHandler.Type.SHOW, sql, null, null,
                 cachePool);
         Assert.assertEquals(-1L, rrs.getLimitSize());
         Assert.assertEquals(false, rrs.isCacheAble());
@@ -330,14 +331,14 @@ public class DDLRouteTest {
 
 
         sql = "SHOW FULL TABLES FROM `TESTDB` WHERE Table_type != 'VIEW'";
-        rrs = routeStrategy.route(new SystemConfig(), schema, ServerParse.SHOW, sql, null, null,
+        rrs = routeStrategy.route(new SystemConfig(), schema, SQLHandler.Type.SHOW, sql, null, null,
                 cachePool);
         Assert.assertEquals(-1L, rrs.getLimitSize());
         Assert.assertEquals(false, rrs.isCacheAble());
         Assert.assertEquals("SHOW FULL TABLES WHERE Table_type != 'VIEW'", rrs.getNodes()[0].getStatement());
 
         sql = "SHOW INDEX  IN offer FROM  db_name";
-        rrs = routeStrategy.route(new SystemConfig(), schema, ServerParse.SHOW, sql, null, null,
+        rrs = routeStrategy.route(new SystemConfig(), schema, SQLHandler.Type.SHOW, sql, null, null,
                 cachePool);
         Assert.assertEquals(false, rrs.isCacheAble());
         Assert.assertEquals(-1L, rrs.getLimitSize());

@@ -1,13 +1,11 @@
 package io.mycat.route.util;
 
-import io.mycat.util.StringUtil;
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Map;
+import io.mycat.util.StringUtil;
 
 /**
  * @author Hash Zhang
@@ -15,7 +13,6 @@ import java.util.Map;
  * @date 2016/7/19
  */
 public class RouterUtilTest {
-
 
 
     @Test
@@ -41,7 +38,6 @@ public class RouterUtilTest {
     @Test
     public void testRemoveSchemaSelect()  {
         String sql = "select id as 'aa' from  test where name='abcdtestx.aa'   and id=1 and testx=123";
-
         String afterAql=  RouterUtil.removeSchema(sql,"testx");
         Assert.assertEquals(sql,afterAql);
 

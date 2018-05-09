@@ -87,7 +87,7 @@ public class PhysicalDBNode {
                               Object attachment) throws Exception {
         checkRequest(schema);
         if (dbPool.isInitSuccess()) {
-            LOGGER.debug("rrs.getRunOnSlave() " + rrs.getRunOnSlave());
+            LOGGER.debug("rrs.getRunOnSlave() {}",rrs.getRunOnSlave());
             if (rrs.getRunOnSlave() != null) { // 带有 /*db_type=master/slave*/ 注解
                 // 强制走 slave
                 if (rrs.getRunOnSlave()) {

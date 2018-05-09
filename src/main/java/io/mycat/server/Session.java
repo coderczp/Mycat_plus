@@ -23,8 +23,12 @@
  */
 package io.mycat.server;
 
-import io.mycat.net.FrontendConnection;
+import io.mycat.backend.BackendConnection;
+import io.mycat.backend.mysql.nio.handler.MiddlerResultHandler;
+import io.mycat.config.MycatConfig;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.route.RouteResultset;
+import io.mycat.route.RouteResultsetNode;
 
 /**
  * @author mycat
@@ -32,9 +36,23 @@ import io.mycat.route.RouteResultset;
 public interface Session {
 
     /**
+     * 获取当前会话的扩展信息
+     * 
+     * @return
+     */
+    SessionVariable getSessionVariable();
+
+    /***
+     * 获取SQL语法树
+     * 
+     * @return
+     */
+    SqlContext getSqlCtx();
+
+    /**
      * 取得源端连接
      */
-    FrontendConnection getSource();
+    ClientConn getSource();
 
     /**
      * 取得当前目标端数量
@@ -62,12 +80,61 @@ public interface Session {
      * @param sponsor
      *            如果发起者为null，则表示由自己发起。
      */
-    void cancel(FrontendConnection sponsor);
+    void cancel(ClientConn sponsor);
 
     /**
      * 终止会话，必须在关闭源端连接后执行该方法。
      */
     void terminate();
-    
+
+    /**
+     * 当前会话的配置
+     * @return
+     */
+    MycatConfig getCurrentConfig();
+
+    /**
+     * 
+     * @return
+     */
+    String getXaTXID();
+
+    /**
+     * 
+     * @return
+     */
+    MiddlerResultHandler<?> getMiddlerResultHandler();
+
+    /**
+     * 
+     * @param b
+     */
+    void setPrepared(boolean b);
+
+    /**
+     * 
+     * @param conn
+     * @param node
+     * @return
+     */
+    boolean tryExistsCon(BackendConnection conn, RouteResultsetNode node);
+
+    /**
+     * 
+     * @param object
+     */
+    void setMiddlerResultHandler(MiddlerResultHandler<?> middlerResultHandler);
+
+    /**
+     * 
+     * @param b
+     */
+    void setCanClose(boolean b);
+
+    /**
+     * 
+     * @return
+     */
+    boolean isPrepared();
 
 }

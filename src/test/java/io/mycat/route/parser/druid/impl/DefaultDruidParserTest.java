@@ -15,7 +15,7 @@ import io.mycat.route.parser.druid.DruidParser;
 import io.mycat.route.parser.druid.DruidParserFactory;
 import io.mycat.route.parser.druid.DruidShardingParseInfo;
 import io.mycat.route.parser.druid.MycatSchemaStatVisitor;
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -54,7 +54,7 @@ public class DefaultDruidParserTest {
         
         
         LayerCachePool cachePool = mock(LayerCachePool.class);
-        RouteResultset rrs = new RouteResultset(sql, ServerParse.SELECT);
+        RouteResultset rrs = new RouteResultset(sql, SQLHandler.Type.SELECT);
 		
 		druidParser.parser(schema, rrs, statement, sql, cachePool, visitor);
 		

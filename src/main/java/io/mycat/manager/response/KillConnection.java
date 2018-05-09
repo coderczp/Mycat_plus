@@ -26,14 +26,15 @@ package io.mycat.manager.response;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger; import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.mycat.MycatServer;
 import io.mycat.manager.ManagerConnection;
-import io.mycat.net.FrontendConnection;
 import io.mycat.net.NIOConnection;
 import io.mycat.net.NIOProcessor;
 import io.mycat.net.mysql.OkPacket;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.util.SplitUtil;
 
 /**
@@ -45,7 +46,7 @@ public final class KillConnection {
 
     public static void response(String stmt, int offset, ManagerConnection mc) {
         int count = 0;
-        List<FrontendConnection> list = getList(stmt, offset, mc);
+        List<ClientConn> list = getList(stmt, offset, mc);
         if (list != null) {
             for (NIOConnection c : list) {
                 StringBuilder s = new StringBuilder();
@@ -61,11 +62,11 @@ public final class KillConnection {
         packet.write(mc);
     }
 
-    private static List<FrontendConnection> getList(String stmt, int offset, ManagerConnection mc) {
+    private static List<ClientConn> getList(String stmt, int offset, ManagerConnection mc) {
         String ids = stmt.substring(offset).trim();
         if (ids.length() > 0) {
             String[] idList = SplitUtil.split(ids, ',', true);
-            List<FrontendConnection> fcList = new ArrayList<FrontendConnection>(idList.length);
+            List<ClientConn> fcList = new ArrayList<ClientConn>(idList.length);
             NIOProcessor[] processors = MycatServer.getInstance().getProcessors();
             for (String id : idList) {
                 long value = 0;
@@ -74,7 +75,7 @@ public final class KillConnection {
                 } catch (NumberFormatException e) {
                     continue;
                 }
-                FrontendConnection fc = null;
+                ClientConn fc = null;
                 for (NIOProcessor p : processors) {
                     if ((fc = p.getFrontends().get(value)) != null) {
                         fcList.add(fc);

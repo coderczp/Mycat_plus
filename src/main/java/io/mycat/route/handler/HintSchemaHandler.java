@@ -9,10 +9,10 @@ import io.mycat.MycatServer;
 import io.mycat.cache.LayerCachePool;
 import io.mycat.config.model.SchemaConfig;
 import io.mycat.config.model.SystemConfig;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.route.RouteResultset;
 import io.mycat.route.RouteStrategy;
 import io.mycat.route.factory.RouteStrategyFactory;
-import io.mycat.server.ServerConnection;
 
 /**
  * 处理注释中类型为schema 的情况（按照指定schema做路由解析）
@@ -43,7 +43,7 @@ public class HintSchemaHandler implements HintHandler {
 	 */
 	@Override
 	public RouteResultset route(SystemConfig sysConfig, SchemaConfig schema,
-			int sqlType, String realSQL, String charset, ServerConnection sc,
+			int sqlType, String realSQL, String charset, ClientConn sc,
 			LayerCachePool cachePool, String hintSQLValue,int hintSqlType, Map hintMap)
 			throws SQLNonTransientException {
 	    SchemaConfig tempSchema = MycatServer.getInstance().getConfig().getSchemas().get(hintSQLValue);

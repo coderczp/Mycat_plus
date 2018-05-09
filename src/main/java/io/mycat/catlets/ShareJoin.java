@@ -1,10 +1,16 @@
 package io.mycat.catlets;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
 import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlSelectQueryBlock;
 import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
+
 import io.mycat.backend.mysql.nio.handler.MiddlerQueryResultHandler;
 import io.mycat.backend.mysql.nio.handler.MiddlerResultHandler;
 import io.mycat.cache.LayerCachePool;
@@ -14,22 +20,18 @@ import io.mycat.config.model.SchemaConfig;
 import io.mycat.config.model.SystemConfig;
 import io.mycat.net.mysql.FieldPacket;
 import io.mycat.net.mysql.RowDataPacket;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.route.RouteResultset;
 import io.mycat.route.RouteResultsetNode;
 import io.mycat.route.factory.RouteStrategyFactory;
 import io.mycat.server.NonBlockingSession;
-import io.mycat.server.ServerConnection;
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.Session;
+import io.mycat.server.parser.SimpleSqlParser;
 import io.mycat.sqlengine.AllJobFinishedListener;
 import io.mycat.sqlengine.EngineCtx;
 import io.mycat.sqlengine.SQLJobHandler;
 import io.mycat.util.ByteUtil;
 import io.mycat.util.ResultSetUtil;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 /**  
  * 功能详细描述:分片join
  * @author sohudo[http://blog.csdn.net/wind520]
@@ -65,14 +67,14 @@ public class ShareJoin implements Catlet {
 	private SchemaConfig schema;
 	private int sqltype; 
 	private String charset; 
-	private ServerConnection sc;	
+	private ClientConn sc;	
 	private LayerCachePool cachePool;
 	public void setRoute(RouteResultset rrs){
 		this.rrs =rrs;
 	}	
 	
-	public void route(SystemConfig sysConfig, SchemaConfig schema,int sqlType, String realSQL, String charset, ServerConnection sc,	LayerCachePool cachePool) {
-		int rs = ServerParse.parse(realSQL);
+	public void route(SystemConfig sysConfig, SchemaConfig schema,int sqlType, String realSQL, String charset, ClientConn sc,	LayerCachePool cachePool) {
+		int rs = SimpleSqlParser.parse(realSQL);
 		this.sqltype = rs & 0xff;
 		this.sysConfig=sysConfig; 
 		this.schema=schema;
@@ -137,7 +139,7 @@ public class ShareJoin implements Catlet {
 		RouteResultsetNode[] nodes = rrs.getNodes();
 		if (nodes == null || nodes.length == 0 || nodes[0].getName() == null
 				|| nodes[0].getName().equals("")) {
-			ctx.getSession().getSource().writeErrMessage(ErrorCode.ER_NO_DB_ERROR,
+			ctx.getSession().getSource().writeErrMessage((byte)1,ErrorCode.ER_NO_DB_ERROR,
 					"No dataNode found ,please check tables defined in schema:"
 							+ ctx.getSession().getSource().getSchema());
 			return;
@@ -297,8 +299,8 @@ class ShareDBJoinHandler implements SQLJobHandler {
 	private List<byte[]> fields;
 	private final ShareJoin ctx;
 	private String joinkey;
-	private NonBlockingSession session;
-	public ShareDBJoinHandler(ShareJoin ctx,String joinField,NonBlockingSession session) {
+	private Session session;
+	public ShareDBJoinHandler(ShareJoin ctx,String joinField,Session session) {
 		super();
 		this.ctx = ctx;
 		this.joinkey=joinField;
@@ -347,7 +349,7 @@ class ShareDBJoinHandler implements SQLJobHandler {
 	@Override
 	public void finished(String dataNode, boolean failed, String errorMsg) {
 		if(failed){
-			session.getSource().writeErrMessage(ErrorCode.ER_UNKNOWN_ERROR, errorMsg);
+			session.getSource().writeErrMessage((byte)1,ErrorCode.ER_UNKNOWN_ERROR, errorMsg);
 		}else{
 			ctx.endJobInput(dataNode,failed);
 		}
@@ -363,9 +365,9 @@ class ShareRowOutPutDataHandler implements SQLJobHandler {
 	private int joinL;//A表(左边)关联字段的位置
 	private int joinR;//B表(右边)关联字段的位置
 	private String joinRkey;//B表(右边)关联字段
-	public NonBlockingSession session;
+	public Session session;
 
-	public ShareRowOutPutDataHandler(ShareJoin ctx,List<byte[]> afields,int joini,String joinField,Map<String, byte[]> arows,NonBlockingSession session) {
+	public ShareRowOutPutDataHandler(ShareJoin ctx,List<byte[]> afields,int joini,String joinField,Map<String, byte[]> arows,Session session) {
 		super();
 		this.afields = afields;
 		this.ctx = ctx;
@@ -453,7 +455,7 @@ class ShareRowOutPutDataHandler implements SQLJobHandler {
 	@Override
 	public void finished(String dataNode, boolean failed, String errorMsg) {
 		if(failed){
-			session.getSource().writeErrMessage(ErrorCode.ER_UNKNOWN_ERROR, errorMsg);
+			session.getSource().writeErrMessage((byte)1,ErrorCode.ER_UNKNOWN_ERROR, errorMsg);
 		}
 	}
 }

@@ -31,11 +31,11 @@ import io.mycat.MycatServer;
 import io.mycat.backend.mysql.PacketUtil;
 import io.mycat.config.Fields;
 import io.mycat.config.model.SchemaConfig;
-import io.mycat.manager.ManagerConnection;
 import io.mycat.net.mysql.EOFPacket;
 import io.mycat.net.mysql.FieldPacket;
 import io.mycat.net.mysql.ResultSetHeaderPacket;
 import io.mycat.net.mysql.RowDataPacket;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.util.StringUtil;
 
 /**
@@ -61,7 +61,7 @@ public final class ShowDatabase {
         eof.packetId = ++packetId;
     }
 
-    public static void execute(ManagerConnection c) {
+    public static void execute(ClientConn c) {
         ByteBuffer buffer = c.allocate();
 
         // write header

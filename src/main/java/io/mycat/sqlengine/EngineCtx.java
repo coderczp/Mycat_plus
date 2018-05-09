@@ -6,29 +6,30 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.slf4j.Logger; import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.mycat.manager.handler.ConfFileHandler;
 import io.mycat.net.mysql.EOFPacket;
-import io.mycat.net.mysql.EmptyPacket;
 import io.mycat.net.mysql.ResultSetHeaderPacket;
 import io.mycat.net.mysql.RowDataPacket;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.server.NonBlockingSession;
-import io.mycat.server.ServerConnection;
+import io.mycat.server.Session;
 
 public class EngineCtx {
 	public static final Logger LOGGER = LoggerFactory.getLogger(ConfFileHandler.class);
 	private final BatchSQLJob bachJob;
 	private AtomicInteger jobId = new AtomicInteger(0);
 	AtomicInteger packetId = new AtomicInteger(0);
-	private final NonBlockingSession session;
+	private final Session session;
 	private AtomicBoolean finished = new AtomicBoolean(false);
 	private AllJobFinishedListener allJobFinishedListener;
 	private AtomicBoolean headerWrited = new AtomicBoolean();
 	private final ReentrantLock writeLock = new ReentrantLock();
 	private volatile boolean hasError = false;
 
-	public EngineCtx(NonBlockingSession session) {
+	public EngineCtx(Session session) {
 		this.bachJob = new BatchSQLJob();
 		this.session = session;
 	}
@@ -82,7 +83,7 @@ public class EngineCtx {
 				headerPkg.fieldCount = afields.size() +bfields.size()-1;
 				headerPkg.packetId = incPackageId();
 				LOGGER.debug("packge id " + headerPkg.packetId);
-				ServerConnection sc = session.getSource();
+				ClientConn sc = session.getSource();
 				ByteBuffer buf = headerPkg.write(sc.allocate(), sc, true);
 				// wirte a fields
 				for (byte[] field : afields) {
@@ -117,7 +118,7 @@ public class EngineCtx {
 				headerPkg.fieldCount = afields.size();// -1;
 				headerPkg.packetId = incPackageId();
 				LOGGER.debug("packge id " + headerPkg.packetId);
-				ServerConnection sc = session.getSource();
+				ClientConn sc = session.getSource();
 				ByteBuffer buf = headerPkg.write(sc.allocate(), sc, true);
 				// wirte a fields
 				for (byte[] field : afields) {
@@ -139,7 +140,7 @@ public class EngineCtx {
 	}
 	
 	public void writeRow(RowDataPacket rowDataPkg) {
-		ServerConnection sc = session.getSource();
+		ClientConn sc = session.getSource();
 		try {
 			writeLock.lock();
 			rowDataPkg.packetId = incPackageId();
@@ -153,7 +154,7 @@ public class EngineCtx {
 	}
 
 	public void writeEof() {
-		ServerConnection sc = session.getSource();
+		ClientConn sc = session.getSource();
 		EOFPacket eofPckg = new EOFPacket();
 		eofPckg.packetId = incPackageId();
 		ByteBuffer buf = eofPckg.write(sc.allocate(), sc, false);
@@ -162,7 +163,7 @@ public class EngineCtx {
 	}
 	
 
-	public NonBlockingSession getSession() {
+	public Session getSession() {
 		return session;
 	}
 

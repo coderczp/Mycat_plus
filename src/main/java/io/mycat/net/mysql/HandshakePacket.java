@@ -27,7 +27,7 @@ import java.nio.ByteBuffer;
 
 import io.mycat.backend.mysql.BufferUtil;
 import io.mycat.backend.mysql.MySQLMessage;
-import io.mycat.net.FrontendConnection;
+import io.mycat.net.plus.ClientConn;
 
 /**
  * From server to client during initial handshake.
@@ -93,7 +93,7 @@ public class HandshakePacket extends MySQLPacket {
         restOfScrambleBuff = mm.readBytesWithNull();
     }
 
-    public void write(FrontendConnection c) {
+    public void write(ClientConn c) {
         ByteBuffer buffer = c.allocate();
         BufferUtil.writeUB3(buffer, calcPacketSize());
         buffer.put(packetId);

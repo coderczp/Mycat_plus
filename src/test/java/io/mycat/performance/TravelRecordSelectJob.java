@@ -62,7 +62,7 @@ public class TravelRecordSelectJob implements Runnable ,SelectJob{
 
 		try {
 
-			String sql = "select * from  travelrecord  where id="
+			String sql = "select * from  tpl  where id="
 					+ ((Math.abs(random.nextLong()) % (maxId - minId)) + minId);
 			long startTime = System.currentTimeMillis();
 			rs = con.createStatement().executeQuery(sql);

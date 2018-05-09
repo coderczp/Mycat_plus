@@ -31,25 +31,14 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class TestInsertPerf extends AbstractMultiTreadBatchTester {
 
-	public static void main(String[] args) throws Exception {
-       new TestInsertPerf().run(args);
-       
+    public static void main(String[] args) throws Exception {
+        new TestInsertPerf().run(args);
+    }
 
-	}
+    @Override
+    public Runnable createJob(SimpleConPool pool, long myCount, int batch, long startId, AtomicLong finshiedCount2,
+                              AtomicLong failedCount2) {
+        return new TravelRecordInsertJob(pool, myCount, batch, startId, finshiedCount, failedCount);
+    }
 
-	@Override
-	public Runnable createJob(SimpleConPool conPool2, long myCount, int batch,
-			long startId, AtomicLong finshiedCount2,
-			AtomicLong failedCount2) {
-		  return new TravelRecordInsertJob(conPool2,
-					myCount, batch, startId, finshiedCount, failedCount);
-	}
-
-	
-
-	
-
-
-
-	
 }

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="/res/css/bootstrap.min.css" rel="stylesheet">
+<link href="/res/css/bootstrap-modal.min.css" rel="stylesheet">
+<link href="/res/css/jquery-date.css" rel="stylesheet">
+<link href="/res/css/bootstrap-select.min.css" rel="stylesheet">
+<link href="/res/css/jquery.dataTables.min.css" rel="stylesheet">
+
+<script src="/res/js/jquery.min.js"></script>
+<script src="/res/js/bootstrap.min.js"></script>
+<script src="/res/js/jstree.js"></script>
+<script src="/res/js/sharding.js"></script>
+<script src="/res/js/jquery-date.js"></script>
+<script src="/res/js/bootstrap-select.min.js"></script>
+<script src="/res/js/jquery.dataTables.min.js"></script>
+<script src="/res/js/bootstrap-modal.pack.min.js"></script>
+
+<title>Mysql-sharding</title>
+</head>
+<body>
+	<nav class="navbar navbar-inverse" role="navigation" id="dtsNav"></nav>
+	<div class="container">
+		<div class="panel panel-success">
+			<div class="panel-heading">
+				<button onclick="doExport()">导出配置</button>
+				<button onclick="openModel()">导入配置</button>
+			</div>
+			<div class="panel-body">
+				<table class="display" id="table">
+				</table>
+			</div>
+		</div>
+		<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="myModalLabel">导入配置</h5>
+					</div>
+					<div class="modal-body">
+						<form class="form" role="form" id="form">
+							<div class="input-group form-group">
+								<textarea rows="14" cols="75" name="sqls" id="sqls" placeholder="sql"></textarea>
+							</div>
+						</form>
+					</div>
+					<div class="modal-footer">
+						<button class="btn" id="updateApp" onclick="doImport()">提交</button>
+						<button class="btn btn-default" data-dismiss="modal">关闭</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+	var cluster = APIFactory.cluster;
+
+	function openModel() {
+		$('#myModal').modal('show');
+	}
+
+	function doExport() {
+		window.open('/api/cluster/config/export');
+	}
+
+	function doImport() {
+		var sqls = $('#sqls').val();
+		if (!sqls) {
+			return alert('请填写sql');
+		}
+
+		cluster.call('/api/cluster/config/import', {
+			"sqls" : sqls
+		}, function(d) {
+			alert(d);
+			$('#myModal').modal('hide');
+		});
+	}
+
+	cluster.list(null, function(val) {
+		$('#table').DataTable({
+			data : val,
+			filter : true,
+			paging : true,
+			columns : [ {
+				"data" : "id",
+				"title" : "ID"
+			}, {
+				"data" : "name",
+				"title" : "名称"
+			}, {
+				"data" : "host",
+				"title" : "主机"
+			}, {
+				"data" : "region",
+				"title" : "数据中心"
+			}, {
+				"data" : "webPort",
+				"title" : "Web端口"
+			}, {
+				"data" : "startTime",
+				"title" : "启动时间",
+				"render" : Date.fromLong
+			} ]
+		});
+	});
+</script>
+</html>

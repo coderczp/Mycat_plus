@@ -15,7 +15,7 @@ import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
 import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlSchemaStatVisitor;
 import com.alibaba.druid.stat.TableStat.Condition;
 
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
 
 /**
  * 特定 SQL 查询条件的统计分析
@@ -71,7 +71,7 @@ public class QueryConditionAnalyzer implements QueryResultListener {
 			String sql = queryResult.getSql();
 	
 			switch(sqlType) {
-	    	case ServerParse.SELECT:		
+	    	case SQLHandler.Type.SELECT:		
     			List<Object> values = sqlParser.parseConditionValues(sql, this.tableName, this.columnName);
 	    		if ( values != null ) {
 	    			

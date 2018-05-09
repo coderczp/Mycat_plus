@@ -28,8 +28,8 @@ import java.nio.channels.NetworkChannel;
 
 import io.mycat.MycatServer;
 import io.mycat.config.MycatPrivileges;
-import io.mycat.net.FrontendConnection;
 import io.mycat.net.factory.FrontendConnectionFactory;
+import io.mycat.net.plus.ClientConn;
 
 /**
  * @author mycat
@@ -37,9 +37,10 @@ import io.mycat.net.factory.FrontendConnectionFactory;
 public class ManagerConnectionFactory extends FrontendConnectionFactory {
 
     @Override
-    protected FrontendConnection getConnection(NetworkChannel channel) throws IOException {
+    protected ClientConn getConnection(NetworkChannel channel) throws IOException {
         ManagerConnection c = new ManagerConnection(channel);
-        MycatServer.getInstance().getConfig().setSocketParams(c, true);
+        MycatServer instance = MycatServer.getInstance();
+        instance.getConfig().setSocketParams(c, true);
         c.setPrivileges(MycatPrivileges.instance());
         c.setQueryHandler(new ManagerQueryHandler(c));
         return c;

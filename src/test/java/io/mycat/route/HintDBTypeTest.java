@@ -9,7 +9,7 @@ import io.mycat.config.loader.xml.XMLSchemaLoader;
 import io.mycat.config.model.SchemaConfig;
 import io.mycat.config.model.SystemConfig;
 import io.mycat.route.factory.RouteStrategyFactory;
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
 
 import java.util.Map;
 
@@ -43,22 +43,22 @@ public class HintDBTypeTest {
         String sql = "/*!mycat:db_type=master*/select * from employee where sharding_id=1";
         CacheService cacheService = new CacheService();
         RouteService routerService = new RouteService(cacheService);
-        RouteResultset rrs = routerService.route(new SystemConfig(), schema, ServerParse.SELECT, sql, "UTF-8", null);
+        RouteResultset rrs = routerService.route(new SystemConfig(), schema, SQLHandler.Type.SELECT, sql, "UTF-8", null);
         Assert.assertTrue(!rrs.getRunOnSlave());
 
         //使用注解（新注解，/*#mycat*/），runOnSlave=false 强制走主节点
         sql = "/*#mycat:db_type=master*/select * from employee where sharding_id=1";
-        rrs = routerService.route(new SystemConfig(), schema, ServerParse.SELECT, sql, "UTF-8", null);
+        rrs = routerService.route(new SystemConfig(), schema, SQLHandler.Type.SELECT, sql, "UTF-8", null);
         Assert.assertTrue(!rrs.getRunOnSlave());
         
         //使用注解（新注解，/*mycat*/），runOnSlave=false 强制走主节点
         sql = "/*mycat:db_type=master*/select * from employee where sharding_id=1";
-        rrs = routerService.route(new SystemConfig(), schema, ServerParse.SELECT, sql, "UTF-8", null);
+        rrs = routerService.route(new SystemConfig(), schema, SQLHandler.Type.SELECT, sql, "UTF-8", null);
         Assert.assertTrue(!rrs.getRunOnSlave());
         
         //不使用注解，runOnSlave=null, 根据读写分离策略走主从库
         sql = "select * from employee where sharding_id=1";
-        rrs = routerService.route(new SystemConfig(), schema, ServerParse.SELECT, sql, "UTF-8", null);
+        rrs = routerService.route(new SystemConfig(), schema, SQLHandler.Type.SELECT, sql, "UTF-8", null);
         Assert.assertTrue(rrs.getRunOnSlave()==null);
     }
 }

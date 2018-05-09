@@ -62,11 +62,12 @@ import io.mycat.buffer.NettyBufferPool;
 import io.mycat.cache.CacheService;
 import io.mycat.config.MycatConfig;
 import io.mycat.config.classloader.DynaClassLoader;
+import io.mycat.config.loader.ConfigLoader;
 import io.mycat.config.model.SchemaConfig;
 import io.mycat.config.model.SystemConfig;
 import io.mycat.config.model.TableConfig;
 import io.mycat.config.table.structure.MySQLTableStructureDetector;
-import io.mycat.ext.utils.FastUUID;
+import io.mycat.ext.uuid.FastUUID;
 import io.mycat.manager.ManagerConnectionFactory;
 import io.mycat.memory.MyCatMemory;
 import io.mycat.net.AIOAcceptor;
@@ -105,9 +106,9 @@ public class MycatServer {
 
     private static final MycatServer   INSTANCE                            = new MycatServer();
     private static final Logger        LOGGER                              = LoggerFactory.getLogger("MycatServer");
-    private static final Repository    fileRepository                      = new FileSystemRepository();
-    private final RouteService         routerService;
-    private final CacheService         cacheService;
+    private Repository                 fileRepository;
+    private RouteService               routerService;
+    private CacheService               cacheService;
     private Properties                 dnIndexProperties;
 
     //AIO连接群组
@@ -116,8 +117,8 @@ public class MycatServer {
 
     //全局序列号
     //	private final MyCATSequnceProcessor sequnceProcessor = new MyCATSequnceProcessor();
-    private final DynaClassLoader      catletClassLoader;
-    private final SQLInterceptor       sqlInterceptor;
+    private DynaClassLoader            catletClassLoader;
+    private SQLInterceptor             sqlInterceptor;
     private volatile int               nextProcessor;
 
     // System Buffer Pool Instance
@@ -136,26 +137,30 @@ public class MycatServer {
         return INSTANCE;
     }
 
-    private final MycatConfig              config;
-    private final ScheduledExecutorService scheduler;
-    private final ScheduledExecutorService heartbeatScheduler;
-    private final SQLRecorder              sqlRecorder;
-    private final AtomicBoolean            isOnline;
-    private final long                     startupTime;
-    private NIOProcessor[]                 processors;
-    private SocketConnector                connector;
-    private NameableExecutor               businessExecutor;
-    private NameableExecutor               sequenceExecutor;
-    private NameableExecutor               timerExecutor;
-    private ListeningExecutorService       listeningExecutorService;
-    private long                           totalNetWorkBufferSize = 0;
+    private MycatConfig              config;
+    private ScheduledExecutorService scheduler;
+    private ScheduledExecutorService heartbeatScheduler;
+    private SQLRecorder              sqlRecorder;
+    private AtomicBoolean            isOnline;
+    private long                     startupTime;
+    private NIOProcessor[]           processors;
+    private SocketConnector          connector;
+    private NameableExecutor         businessExecutor;
+    private NameableExecutor         sequenceExecutor;
+    private NameableExecutor         timerExecutor;
+    private ListeningExecutorService listeningExecutorService;
+    private long                     totalNetWorkBufferSize = 0;
 
-    private final AtomicBoolean            startup                = new AtomicBoolean(false);
+    private AtomicBoolean            startup                = new AtomicBoolean(false);
 
     private MycatServer() {
+    }
 
+    public void init(ConfigLoader configLoader) {
         //读取文件配置
-        this.config = new MycatConfig();
+        config = new MycatConfig(configLoader);
+
+        fileRepository = new FileSystemRepository();
 
         //定时线程池，单线程线程池
         scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -164,14 +169,7 @@ public class MycatServer {
         heartbeatScheduler = Executors.newSingleThreadScheduledExecutor();
 
         //SQL记录器
-        this.sqlRecorder = new SQLRecorder(config.getSystem().getSqlRecordCount());
-
-        /**
-         * 是否在线，MyCat manager中有命令控制
-         * | offline | Change MyCat status to OFF |
-         * | online | Change MyCat status to ON |
-         */
-        this.isOnline = new AtomicBoolean(true);
+        sqlRecorder = new SQLRecorder(config.getSystem().getSqlRecordCount());
 
         //缓存服务初始化
         cacheService = new CacheService();
@@ -192,9 +190,15 @@ public class MycatServer {
         catletClassLoader = new DynaClassLoader(SystemConfig.getHomePath() + File.separator + "catlet",
             config.getSystem().getCatletClassCheckSeconds());
 
+        /**
+         * 是否在线，MyCat manager中有命令控制
+         * | offline | Change MyCat status to OFF |
+         * | online | Change MyCat status to ON |
+         */
+        this.isOnline = new AtomicBoolean(true);
+
         //记录启动时间
         this.startupTime = TimeUtil.currentTimeMillis();
-
     }
 
     public AtomicBoolean getStartup() {
@@ -243,7 +247,7 @@ public class MycatServer {
     }
 
     public String getXATXIDGLOBAL() {
-        return "'" + getUUID() + "'";
+        return String.format("'%s'", getUUID());
     }
 
     public static String getUUID() {
@@ -273,6 +277,15 @@ public class MycatServer {
             }
 
         }
+    }
+
+    /***
+     * 获取不分区版本的配置,主要用于心跳监测
+     * 
+     * @return
+     */
+    public MycatConfig getAnyVersionConfig() {
+        return config;
     }
 
     public MycatConfig getConfig() {
@@ -475,8 +488,8 @@ public class MycatServer {
         startup.set(true);
     }
 
-    public void initRuleData() {}
-
+    public void initRuleData() {
+    }
 
     public void reloadDnIndex() {
         if (MycatServer.getInstance().getProcessors() == null)
@@ -492,7 +505,6 @@ public class MycatServer {
                 LOGGER.info("reinit datahost: " + node.getHostName() + "  to use datasource index:" + index);
             }
             node.switchSource(Integer.parseInt(index), true, "reload dnindex");
-
         }
     }
 
@@ -521,8 +533,8 @@ public class MycatServer {
                     @Override
                     public void run() {
 
-                        long sqlTimeout = MycatServer.getInstance().getConfig().getSystem().getSqlExecuteTimeout()
-                                          * 1000L;
+                        long sqlTimeout = MycatServer.getInstance().getAnyVersionConfig().getSystem()
+                            .getSqlExecuteTimeout() * 1000L;
 
                         //根据 lastTime 确认事务的执行， 超过 sqlExecuteTimeout 阀值 close connection 
                         long currentTime = TimeUtil.currentTimeMillis();
@@ -636,7 +648,6 @@ public class MycatServer {
         }
 
     }
-
 
     public RouteService getRouterService() {
         return routerService;

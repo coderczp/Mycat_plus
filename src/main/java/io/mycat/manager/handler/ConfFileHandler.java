@@ -39,7 +39,8 @@ import java.util.Date;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.slf4j.Logger; import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import io.mycat.MycatServer;
@@ -47,11 +48,11 @@ import io.mycat.backend.mysql.PacketUtil;
 import io.mycat.config.Fields;
 import io.mycat.config.model.SystemConfig;
 import io.mycat.config.util.ConfigUtil;
-import io.mycat.manager.ManagerConnection;
 import io.mycat.net.mysql.EOFPacket;
 import io.mycat.net.mysql.FieldPacket;
 import io.mycat.net.mysql.ResultSetHeaderPacket;
 import io.mycat.net.mysql.RowDataPacket;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.util.StringUtil;
 
 /**
@@ -79,7 +80,7 @@ public final class ConfFileHandler {
 		eof.packetId = ++packetId;
 	}
 
-	public static void handle( String stmt,ManagerConnection c) {
+	public static void handle( String stmt,ClientConn c) {
 		ByteBuffer buffer = c.allocate();
 
 		// write header
@@ -184,7 +185,7 @@ public final class ConfFileHandler {
 		return outStream.toByteArray();
 	}
 
-	private static PackageBufINf upLoadConfigFile(ManagerConnection c,
+	private static PackageBufINf upLoadConfigFile(ClientConn c,
 			ByteBuffer buffer, byte packetId, String fileName, String content) {
 		LOGGER.info("Upload Daas Config file " + fileName + " ,content:"
 				+ content);
@@ -247,7 +248,7 @@ public final class ConfFileHandler {
 		}
 	}
 
-	private static PackageBufINf showInfo(ManagerConnection c,
+	private static PackageBufINf showInfo(ClientConn c,
 			ByteBuffer buffer, byte packetId, String string) {
 		PackageBufINf bufINf = new PackageBufINf();
 		RowDataPacket row = new RowDataPacket(FIELD_COUNT);
@@ -259,7 +260,7 @@ public final class ConfFileHandler {
 		return bufINf;
 	}
 
-	private static PackageBufINf showConfigFile(ManagerConnection c,
+	private static PackageBufINf showConfigFile(ClientConn c,
 			ByteBuffer buffer, byte packetId, String fileName) {
 		File file = new File(SystemConfig.getHomePath(), "conf"
 				+ File.separator + fileName);
@@ -302,7 +303,7 @@ public final class ConfFileHandler {
 		return bufINf;
 	}
 
-	private static PackageBufINf listConfigFiles(ManagerConnection c,
+	private static PackageBufINf listConfigFiles(ClientConn c,
 			ByteBuffer buffer, byte packetId) {
 		PackageBufINf bufINf = new PackageBufINf();
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm");

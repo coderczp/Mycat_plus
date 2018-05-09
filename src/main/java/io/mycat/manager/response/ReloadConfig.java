@@ -63,7 +63,6 @@ public final class ReloadConfig {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ReloadConfig.class);
 
 	public static void execute(ManagerConnection c, final boolean loadAll) {
-		
 		// reload @@config_all 校验前一次的事务完成情况
 		if ( loadAll && !NIOProcessor.backends_old.isEmpty() ) {
 			c.writeErrMessage(ErrorCode.ER_YES, "The are several unfinished db transactions before executing \"reload @@config_all\", therefore the execution is terminated for logical integrity and please try again later.");
@@ -89,12 +88,23 @@ public final class ReloadConfig {
 
 	public static boolean reload_all() {
 		
+	    /**
+         *  2、承接
+         *  2.1、老的 dataSource 继续承接新建请求
+         *  2.2、新的 dataSource 开始初始化， 完毕后交由 2.3
+         *  2.3、新的 dataSource 开始承接新建请求
+         *  2.4、老的 dataSource 内部的事务执行完毕， 相继关闭
+         *  2.5、老的 dataSource 超过阀值的，强制关闭
+         */
+        
+        MycatConfig config = MycatServer.getInstance().getConfig();
+        
 		/**
 		 *  1、载入新的配置
 		 *  1.1、ConfigInitializer 初始化，基本自检
 		 *  1.2、DataNode/DataHost 实际链路检测
 		 */
-		ConfigInitializer loader = new ConfigInitializer(true);
+		ConfigInitializer loader = config.getConfigIniter();
 		Map<String, UserConfig> newUsers = loader.getUsers();
 		Map<String, SchemaConfig> newSchemas = loader.getSchemas();
 		Map<String, PhysicalDBNode> newDataNodes = loader.getDataNodes();
@@ -107,16 +117,7 @@ public final class ReloadConfig {
 		 */
 		loader.testConnection();
 
-		/**
-		 *  2、承接
-		 *  2.1、老的 dataSource 继续承接新建请求
-		 *  2.2、新的 dataSource 开始初始化， 完毕后交由 2.3
-		 *  2.3、新的 dataSource 开始承接新建请求
-		 *  2.4、老的 dataSource 内部的事务执行完毕， 相继关闭
-		 *  2.5、老的 dataSource 超过阀值的，强制关闭
-		 */
 		
-		MycatConfig config = MycatServer.getInstance().getConfig();
 		
 		/**
 		 * 2.1 、老的 dataSource 继续承接新建请求， 此处什么也不需要做
@@ -225,7 +226,8 @@ public final class ReloadConfig {
     	/**
 		 *  1、载入新的配置， ConfigInitializer 内部完成自检工作, 由于不更新数据源信息,此处不自检 dataHost  dataNode
 		 */
-        ConfigInitializer loader = new ConfigInitializer(false);
+        MycatConfig config = MycatServer.getInstance().getConfig();
+        ConfigInitializer loader = config.getConfigIniter();
         Map<String, UserConfig> users = loader.getUsers();
         Map<String, SchemaConfig> schemas = loader.getSchemas();
         Map<String, PhysicalDBNode> dataNodes = loader.getDataNodes();

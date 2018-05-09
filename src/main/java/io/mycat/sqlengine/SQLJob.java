@@ -12,7 +12,7 @@ import io.mycat.backend.mysql.nio.handler.ResponseHandler;
 import io.mycat.config.MycatConfig;
 import io.mycat.net.mysql.ErrorPacket;
 import io.mycat.route.RouteResultsetNode;
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
 
 /**
  * asyn execute in EngineCtx or standalone (EngineCtx=null)
@@ -60,7 +60,7 @@ public class SQLJob implements ResponseHandler, Runnable {
 		try {
 			if (ds == null) {
 				RouteResultsetNode node = new RouteResultsetNode(
-						dataNodeOrDatabase, ServerParse.SELECT, sql);
+						dataNodeOrDatabase, SQLHandler.Type.SELECT, sql);
 				// create new connection
 				MycatConfig conf = MycatServer.getInstance().getConfig();
 				PhysicalDBNode dn = conf.getDataNodes().get(node.getName());

@@ -12,11 +12,11 @@ import java.nio.ByteBuffer;
 import io.mycat.backend.mysql.PacketUtil;
 import io.mycat.config.Fields;
 import io.mycat.config.model.SystemConfig;
-import io.mycat.manager.ManagerConnection;
 import io.mycat.net.mysql.EOFPacket;
 import io.mycat.net.mysql.FieldPacket;
 import io.mycat.net.mysql.ResultSetHeaderPacket;
 import io.mycat.net.mysql.RowDataPacket;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.util.StringUtil;
 
 /**
@@ -47,7 +47,7 @@ public class ShowSysLog {
 		eof.packetId = ++packetId;
 	}
 
-	public static void execute(ManagerConnection c, int numLines) {
+	public static void execute(ClientConn c, int numLines) {
 		ByteBuffer buffer = c.allocate();
 
 		// write header

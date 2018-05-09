@@ -12,8 +12,8 @@ import org.slf4j.Logger; import org.slf4j.LoggerFactory;
 
 import io.mycat.MycatServer;
 import io.mycat.config.model.SystemConfig;
+import io.mycat.server.handler.plus.SQLHandler;
 import io.mycat.server.interceptor.SQLInterceptor;
-import io.mycat.server.parser.ServerParse;
 
 import java.io.File;
 
@@ -39,19 +39,19 @@ private final class StatisticsSqlRunner implements Runnable {
                 for (String type : sqlInterceptorTypes) {
                     if (StatisticsSqlInterceptor.parseType(type.toUpperCase()) == sqltype) {
                         switch (sqltype) {
-                            case ServerParse.SELECT:
+                            case SQLHandler.Type.SELECT:
                                 StatisticsSqlInterceptor.appendFile(sqlInterceptorFile, "SELECT:"
                                     + sqls + "");
                                 break;
-                            case ServerParse.UPDATE:
+                            case SQLHandler.Type.UPDATE:
                                 StatisticsSqlInterceptor.appendFile(sqlInterceptorFile, "UPDATE:"
                                     + sqls);
                                 break;
-                            case ServerParse.INSERT:
+                            case SQLHandler.Type.INSERT:
                                 StatisticsSqlInterceptor.appendFile(sqlInterceptorFile, "INSERT:"
                                     + sqls);
                                 break;
-                            case ServerParse.DELETE:
+                            case SQLHandler.Type.DELETE:
                                 StatisticsSqlInterceptor.appendFile(sqlInterceptorFile, "DELETE:"
                                     + sqls);
                                 break;

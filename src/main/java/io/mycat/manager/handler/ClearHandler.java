@@ -24,8 +24,8 @@
 package io.mycat.manager.handler;
 
 import io.mycat.config.ErrorCode;
-import io.mycat.manager.ManagerConnection;
 import io.mycat.manager.response.ClearSlow;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.route.parser.ManagerParseClear;
 import io.mycat.util.StringUtil;
 
@@ -34,13 +34,13 @@ import io.mycat.util.StringUtil;
  */
 public class ClearHandler {
 
-    public static void handle(String stmt, ManagerConnection c, int offset) {
+    public static void handle(String stmt, ClientConn c, int offset) {
         int rs = ManagerParseClear.parse(stmt, offset);
         switch (rs & 0xff) {
         case ManagerParseClear.SLOW_DATANODE: {
             String name = stmt.substring(rs >>> 8).trim();
             if (StringUtil.isEmpty(name)) {
-                c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement");
+                c.writeErrMessage((byte)1,ErrorCode.ER_YES, "Unsupported statement");
             } else {
                 ClearSlow.dataNode(c, name);
             }
@@ -49,14 +49,14 @@ public class ClearHandler {
         case ManagerParseClear.SLOW_SCHEMA: {
             String name = stmt.substring(rs >>> 8).trim();
             if (StringUtil.isEmpty(name)) {
-                c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement");
+                c.writeErrMessage((byte)1,ErrorCode.ER_YES, "Unsupported statement");
             } else {
                 ClearSlow.schema(c, name);
             }
             break;
         }
         default:
-            c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement");
+            c.writeErrMessage((byte)1,ErrorCode.ER_YES, "Unsupported statement");
         }
     }
 }

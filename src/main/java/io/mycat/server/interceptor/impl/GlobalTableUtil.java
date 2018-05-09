@@ -10,11 +10,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
+import com.alibaba.druid.sql.ast.SQLLimit;
 import com.alibaba.druid.sql.ast.SQLName;
 import com.alibaba.druid.sql.ast.SQLOrderBy;
 import com.alibaba.druid.sql.ast.SQLOrderingSpecification;
@@ -25,7 +25,6 @@ import com.alibaba.druid.sql.ast.expr.SQLInSubQueryExpr;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableStatement;
 import com.alibaba.druid.sql.ast.statement.SQLCharacterDataType;
 import com.alibaba.druid.sql.ast.statement.SQLColumnDefinition;
-import com.alibaba.druid.sql.ast.statement.SQLConstraint;
 import com.alibaba.druid.sql.ast.statement.SQLCreateTableStatement;
 import com.alibaba.druid.sql.ast.statement.SQLExprTableSource;
 import com.alibaba.druid.sql.ast.statement.SQLInsertStatement.ValuesClause;
@@ -34,7 +33,6 @@ import com.alibaba.druid.sql.ast.statement.SQLTableElement;
 import com.alibaba.druid.sql.ast.statement.SQLTableSource;
 import com.alibaba.druid.sql.ast.statement.SQLUpdateSetItem;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlInsertStatement;
-import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlSelectQueryBlock.Limit;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlUpdateStatement;
 import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
 import com.alibaba.fastjson.JSON;
@@ -48,7 +46,7 @@ import io.mycat.backend.mysql.nio.MySQLDataSource;
 import io.mycat.config.MycatConfig;
 import io.mycat.config.model.SchemaConfig;
 import io.mycat.config.model.TableConfig;
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
 import io.mycat.sqlengine.SQLQueryResult;
 import io.mycat.util.StringUtil;
 
@@ -89,13 +87,13 @@ public class GlobalTableUtil{
 		
 		LOGGER.debug("before intercept: " +  sql);
 		
-		if(sqlType == ServerParse.INSERT){
+		if(sqlType == SQLHandler.Type.INSERT){
 			sql =  convertInsertSQL(sql);
 		}
-		if(sqlType == ServerParse.UPDATE){
+		if(sqlType == SQLHandler.Type.UPDATE){
 			sql = convertUpdateSQL(sql);
 		}
-		if(sqlType == ServerParse.DDL){
+		if(sqlType == SQLHandler.Type.DDL){
 			LOGGER.info(" DDL to modify global table.");
 			sql = handleDDLSQL(sql);	
 		}
@@ -131,7 +129,7 @@ public class GlobalTableUtil{
 		if (source == null)
 			return sql;
 		String tableName = StringUtil.removeBackquote(source.toString());
-		if(StringUtils.isNotBlank(tableName))
+		if(StringUtil.isNotBlank(tableName))
 			tableName = tableName.trim();
 		else
 			return sql;
@@ -272,7 +270,7 @@ public class GlobalTableUtil{
 	        
 	        if(columns == null || columns.size() <= 0){ // insert 没有带列名：insert into t values(xxx,xxx)
 	        	String columnsList = tableColumsMap.get(tableName.toUpperCase());
-	        	if(StringUtils.isNotBlank(columnsList)){ //"id,name,_mycat_op_time"
+	        	if(StringUtil.isNotBlank(columnsList)){ //"id,name,_mycat_op_time"
 	        		//newSQL = "insert into t(id,name,_mycat_op_time)";
 	        		// 构建一个虚拟newSQL来寻找 内部列的索引位置
 	        		String newSQL = "insert into " + tableName + "(" + columnsList + ")";
@@ -451,7 +449,7 @@ public class GlobalTableUtil{
 				where = update.getWhere().toString();
 			
 			SQLOrderBy orderBy = update.getOrderBy();
-			Limit limit = update.getLimit();
+			SQLLimit limit = update.getLimit();
 			
 			sb.append("update ").append(tableName).append(" set ");
 			List<SQLUpdateSetItem> items = update.getItems();
@@ -664,7 +662,7 @@ public class GlobalTableUtil{
 					if(row.containsKey(GlobalTableUtil.INNER_COLUMN)){
 						String columnsList = null;
 						try{
-							if(StringUtils.isNotBlank(row.get(GlobalTableUtil.INNER_COLUMN)))
+							if(StringUtil.isNotBlank(row.get(GlobalTableUtil.INNER_COLUMN)))
 								columnsList = row.get(GlobalTableUtil.INNER_COLUMN); // id,name,_mycat_op_time
 							LOGGER.debug("columnsList: " + columnsList);
 						}catch(Exception e){
@@ -676,7 +674,7 @@ public class GlobalTableUtil{
 										+ " inner column: " 
 										+ GlobalTableUtil.GLOBAL_TABLE_MYCAT_COLUMN
 										+ " is not exist.");
-								if(StringUtils.isNotBlank(map.getTableName())){
+								if(StringUtil.isNotBlank(map.getTableName())){
 									for(SQLQueryResult<Map<String, String>> sqr : innerColumnNotExist){
 										String name = map.getTableName();
 										String node = map.getDataNode();

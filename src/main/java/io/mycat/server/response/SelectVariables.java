@@ -23,39 +23,31 @@
  */
 package io.mycat.server.response;
 
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Splitter;
 
-import io.mycat.backend.BackendConnection;
 import io.mycat.backend.mysql.PacketUtil;
 import io.mycat.config.Fields;
 import io.mycat.net.mysql.EOFPacket;
 import io.mycat.net.mysql.FieldPacket;
 import io.mycat.net.mysql.ResultSetHeaderPacket;
 import io.mycat.net.mysql.RowDataPacket;
-import io.mycat.server.NonBlockingSession;
-import io.mycat.server.ServerConnection;
-import io.mycat.util.LongUtil;
-import io.mycat.util.StringUtil;
-
-import org.slf4j.Logger; import org.slf4j.LoggerFactory;
-
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import io.mycat.net.plus.ClientConn;
 
 /**
  * @author mycat
  */
 public final class SelectVariables
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SelectVariables.class);
-
-
-    public static void execute(ServerConnection c, String sql) {
+    public static void execute(ClientConn c, String sql) {
 
      String subSql=   sql.substring(sql.indexOf("SELECT")+6);
     List<String>  splitVar=   Splitter.on(",").omitEmptyStrings().trimResults().splitToList(subSql) ;

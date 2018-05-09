@@ -43,7 +43,7 @@ public class PartitionByHashModTest {
                 e.printStackTrace();
             }
             PartitionByHashMod partitionByHashMod = new PartitionByHashMod();
-            partitionByHashMod.setCount(count);
+            partitionByHashMod.setPartitionNum(count);
             Random random = new Random();
             StringBuffer sb = new StringBuffer();
             long start = System.currentTimeMillis();

@@ -31,7 +31,7 @@ import io.mycat.net.mysql.EOFPacket;
 import io.mycat.net.mysql.FieldPacket;
 import io.mycat.net.mysql.ResultSetHeaderPacket;
 import io.mycat.net.mysql.RowDataPacket;
-import io.mycat.server.ServerConnection;
+import io.mycat.net.plus.ClientConn;
 
 /**
  * @author mycat
@@ -52,7 +52,7 @@ public class SelectVersionComment {
         eof.packetId = ++packetId;
     }
 
-    public static void response(ServerConnection c) {
+    public static void response(ClientConn c) {
         ByteBuffer buffer = c.allocate();
 
         // write header

@@ -30,7 +30,7 @@ import java.util.List;
 import io.mycat.backend.mysql.BufferUtil;
 import io.mycat.backend.mysql.MySQLMessage;
 import io.mycat.buffer.BufferArray;
-import io.mycat.net.FrontendConnection;
+import io.mycat.net.plus.ClientConn;
 
 /**
  * From server to client. One packet for each row in the result set.
@@ -87,7 +87,7 @@ public class RowDataPacket extends MySQLPacket {
 	}
 
 	@Override
-	public ByteBuffer write(ByteBuffer bb, FrontendConnection c,
+	public ByteBuffer write(ByteBuffer bb, ClientConn c,
 			boolean writeSocketIfFull) {
 		bb = c.checkWriteBuffer(bb, c.getPacketHeaderSize(), writeSocketIfFull);
 		BufferUtil.writeUB3(bb, calcPacketSize());

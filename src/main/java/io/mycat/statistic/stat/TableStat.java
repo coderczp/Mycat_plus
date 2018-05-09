@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
 
 /**
  * SQL统计中,统计出来每个表的读,写的TPS,分辨出当前最热的表，
@@ -53,13 +53,13 @@ public class TableStat implements Comparable<TableStat> {
 		
 		//记录 RW
 		switch(sqlType) {
-    	case ServerParse.SELECT:		
+    	case SQLHandler.Type.SELECT:		
 			this.rCount.incrementAndGet();		
     		break;
-    	case ServerParse.UPDATE:			
-    	case ServerParse.INSERT:		
-    	case ServerParse.DELETE:
-    	case ServerParse.REPLACE:
+    	case SQLHandler.Type.UPDATE:			
+    	case SQLHandler.Type.INSERT:		
+    	case SQLHandler.Type.DELETE:
+    	case SQLHandler.Type.REPLACE:
     		this.wCount.incrementAndGet();
     		break;
     	}

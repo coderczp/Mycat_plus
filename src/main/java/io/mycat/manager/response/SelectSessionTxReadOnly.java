@@ -4,11 +4,11 @@ import java.nio.ByteBuffer;
 
 import io.mycat.backend.mysql.PacketUtil;
 import io.mycat.config.Fields;
-import io.mycat.manager.ManagerConnection;
 import io.mycat.net.mysql.EOFPacket;
 import io.mycat.net.mysql.FieldPacket;
 import io.mycat.net.mysql.ResultSetHeaderPacket;
 import io.mycat.net.mysql.RowDataPacket;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.util.LongUtil;
 
 public final class SelectSessionTxReadOnly {
@@ -29,7 +29,7 @@ public final class SelectSessionTxReadOnly {
         eof.packetId = ++packetId;
     }
 
-    public static void execute(ManagerConnection c) {
+    public static void execute(ClientConn c) {
         ByteBuffer buffer = c.allocate();
 
         // write header

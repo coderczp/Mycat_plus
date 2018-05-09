@@ -36,27 +36,27 @@ import io.mycat.MycatServer;
 import io.mycat.backend.mysql.SecurityUtil;
 import io.mycat.config.Capabilities;
 import io.mycat.config.ErrorCode;
+import io.mycat.config.MycatConfig;
 import io.mycat.config.model.UserConfig;
-import io.mycat.net.FrontendConnection;
 import io.mycat.net.NIOHandler;
 import io.mycat.net.NIOProcessor;
 import io.mycat.net.mysql.AuthPacket;
 import io.mycat.net.mysql.MySQLPacket;
 import io.mycat.net.mysql.QuitPacket;
+import io.mycat.net.plus.ClientConn;
 
-/**
- * 前端认证处理器
- * 
- * @author mycat
+/***
+ * 客户端登录命令处理
+ * @author jeff.cao
+ * @version 0.0.1, 2018年4月25日 上午11:40:10
  */
 public class FrontendAuthenticator implements NIOHandler {
-	
-    private static final Logger LOGGER = LoggerFactory.getLogger(FrontendAuthenticator.class);
-    private static final byte[] AUTH_OK = new byte[] { 7, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0 };
-    
-    protected final FrontendConnection source;
 
-    public FrontendAuthenticator(FrontendConnection source) {
+    private static final Logger LOGGER  = LoggerFactory.getLogger(FrontendAuthenticator.class);
+    private static final byte[] AUTH_OK = new byte[] { 7, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0 };
+    protected final ClientConn  source;
+
+    public FrontendAuthenticator(ClientConn source) {
         this.source = source;
     }
 
@@ -72,45 +72,49 @@ public class FrontendAuthenticator implements NIOHandler {
         auth.read(data);
 
         //huangyiming add
-        int nopassWordLogin = MycatServer.getInstance().getConfig().getSystem().getNonePasswordLogin();
+        MycatConfig config = MycatServer.getInstance().getConfig();
+        int nopassWordLogin = config.getSystem().getNonePasswordLogin();
         //如果无密码登陆则跳过密码验证这个步骤
         boolean skipPassWord = false;
-        String defaultUser = "";
-        if(nopassWordLogin == 1){
-        	skipPassWord = true;
-        	Map<String, UserConfig> userMaps =  MycatServer.getInstance().getConfig().getUsers();
-        	if(!userMaps.isEmpty()){
-        		setDefaultAccount(auth, userMaps);
-        	}
+        //String defaultUser = "";
+        if (nopassWordLogin == 1) {
+            skipPassWord = true;
+            Map<String, UserConfig> userMaps = config.getUsers();
+            if (!userMaps.isEmpty()) {
+                setDefaultAccount(auth, userMaps);
+            }
         }
         // check user
         if (!checkUser(auth.user, source.getHost())) {
-        	failure(ErrorCode.ER_ACCESS_DENIED_ERROR, "Access denied for user '" + auth.user + "' with host '" + source.getHost()+ "'");
-        	return;
+            failure(ErrorCode.ER_ACCESS_DENIED_ERROR,
+                "Access denied for user '" + auth.user + "' with host '" + source.getHost() + "'");
+            return;
         }
         // check password
         if (!skipPassWord && !checkPassword(auth.password, auth.user)) {
-        	failure(ErrorCode.ER_ACCESS_DENIED_ERROR, "Access denied for user '" + auth.user + "', because password is error ");
-        	return;
+            failure(ErrorCode.ER_ACCESS_DENIED_ERROR,
+                "Access denied for user '" + auth.user + "', because password is error ");
+            return;
         }
-        
+
         // check degrade
-        if ( isDegrade( auth.user ) ) {
-        	 failure(ErrorCode.ER_ACCESS_DENIED_ERROR, "Access denied for user '" + auth.user + "', because service be degraded ");
-             return;
+        if (isDegrade(auth.user)) {
+            failure(ErrorCode.ER_ACCESS_DENIED_ERROR,
+                "Access denied for user '" + auth.user + "', because service be degraded ");
+            return;
         }
-        
+
         // check schema
         switch (checkSchema(auth.database, auth.user)) {
-        case ErrorCode.ER_BAD_DB_ERROR:
-            failure(ErrorCode.ER_BAD_DB_ERROR, "Unknown database '" + auth.database + "'");
-            break;
-        case ErrorCode.ER_DBACCESS_DENIED_ERROR:
-            String s = "Access denied for user '" + auth.user + "' to database '" + auth.database + "'";
-            failure(ErrorCode.ER_DBACCESS_DENIED_ERROR, s);
-            break;
-        default:
-            success(auth);
+            case ErrorCode.ER_BAD_DB_ERROR:
+                failure(ErrorCode.ER_BAD_DB_ERROR, "Unknown database '" + auth.database + "'");
+                break;
+            case ErrorCode.ER_DBACCESS_DENIED_ERROR:
+                String s = "Access denied for user '" + auth.user + "' to database '" + auth.database + "'";
+                failure(ErrorCode.ER_DBACCESS_DENIED_ERROR, s);
+                break;
+            default:
+                success(auth);
         }
     }
 
@@ -119,39 +123,39 @@ public class FrontendAuthenticator implements NIOHandler {
      * @param auth
      * @param userMaps
      */
-	private void setDefaultAccount(AuthPacket auth, Map<String, UserConfig> userMaps) {
-		String defaultUser;
-		Iterator<UserConfig> items = userMaps.values().iterator();
-		while(items.hasNext()){
-			UserConfig userConfig = items.next();
-			if(userConfig.isDefaultAccount()){
-				defaultUser = userConfig.getName(); 
-				auth.user = defaultUser;
-			}
-		}
-	}
-    
+    private void setDefaultAccount(AuthPacket auth, Map<String, UserConfig> userMaps) {
+        String defaultUser;
+        Iterator<UserConfig> items = userMaps.values().iterator();
+        while (items.hasNext()) {
+            UserConfig userConfig = items.next();
+            if (userConfig.isDefaultAccount()) {
+                defaultUser = userConfig.getName();
+                auth.user = defaultUser;
+            }
+        }
+    }
+
     //TODO: add by zhuam
     //前端 connection 达到该用户设定的阀值后, 立马降级拒绝连接
     protected boolean isDegrade(String user) {
-    	
-    	int benchmark = source.getPrivileges().getBenchmark(user);
-    	if ( benchmark > 0 ) {
-    	
-	    	int forntedsLength = 0;
-	    	NIOProcessor[] processors = MycatServer.getInstance().getProcessors();
-			for (NIOProcessor p : processors) {
-				forntedsLength += p.getForntedsLength();
-			}
-		
-			if ( forntedsLength >= benchmark ) {							
-				return true;
-			}			
-    	}
-		
-		return false;
+
+        int benchmark = source.getPrivileges().getBenchmark(user);
+        if (benchmark > 0) {
+
+            int forntedsLength = 0;
+            NIOProcessor[] processors = MycatServer.getInstance().getProcessors();
+            for (NIOProcessor p : processors) {
+                forntedsLength += p.getForntedsLength();
+            }
+
+            if (forntedsLength >= benchmark) {
+                return true;
+            }
+        }
+
+        return false;
     }
-    
+
     protected boolean checkUser(String user, String host) {
         return source.getPrivileges().userExists(user, host);
     }
@@ -217,27 +221,25 @@ public class FrontendAuthenticator implements NIOHandler {
         source.setHandler(new FrontendCommandHandler(source));
 
         if (LOGGER.isInfoEnabled()) {
-            StringBuilder s = new StringBuilder();
-            s.append(source).append('\'').append(auth.user).append("' login success");
-            byte[] extra = auth.extra;
-            if (extra != null && extra.length > 0) {
-                s.append(",extra:").append(new String(extra));
+            String str = "";
+            byte[] ext = auth.extra;
+            if (ext != null && ext.length > 0) {
+                str = new String(ext);
             }
-            LOGGER.info(s.toString());
+            LOGGER.info(String.format("%s-%s login success,extra:", source, auth.user, str));
         }
 
         ByteBuffer buffer = source.allocate();
         source.write(source.writeToBuffer(AUTH_OK, buffer));
-        boolean clientCompress = Capabilities.CLIENT_COMPRESS==(Capabilities.CLIENT_COMPRESS & auth.clientFlags);
-        boolean usingCompress= MycatServer.getInstance().getConfig().getSystem().getUseCompression()==1 ;
-        if(clientCompress&&usingCompress)
-        {
+        boolean clientCompress = Capabilities.CLIENT_COMPRESS == (Capabilities.CLIENT_COMPRESS & auth.clientFlags);
+        boolean usingCompress = MycatServer.getInstance().getConfig().getSystem().getUseCompression() == 1;
+        if (clientCompress && usingCompress) {
             source.setSupportCompress(true);
         }
     }
 
     protected void failure(int errno, String info) {
-        LOGGER.error(source.toString() + info);
+        LOGGER.error(source + info);
         source.writeErrMessage((byte) 2, errno, info);
     }
 

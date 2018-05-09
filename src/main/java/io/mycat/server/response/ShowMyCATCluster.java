@@ -28,7 +28,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger; import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.mycat.MycatServer;
 import io.mycat.backend.mysql.PacketUtil;
@@ -43,7 +44,7 @@ import io.mycat.net.mysql.EOFPacket;
 import io.mycat.net.mysql.FieldPacket;
 import io.mycat.net.mysql.ResultSetHeaderPacket;
 import io.mycat.net.mysql.RowDataPacket;
-import io.mycat.server.ServerConnection;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.util.IntegerUtil;
 import io.mycat.util.StringUtil;
 
@@ -69,7 +70,7 @@ public class ShowMyCATCluster {
         eof.packetId = ++packetId;
     }
 
-    public static void response(ServerConnection c) {
+    public static void response(ClientConn c) {
         ByteBuffer buffer = c.allocate();
 
         // write header
@@ -99,7 +100,7 @@ public class ShowMyCATCluster {
         c.write(buffer);
     }
 
-    private static List<RowDataPacket> getRows(ServerConnection c) {
+    private static List<RowDataPacket> getRows(ClientConn c) {
         List<RowDataPacket> rows = new LinkedList<RowDataPacket>();
         MycatConfig config = MycatServer.getInstance().getConfig();
         MycatCluster cluster = config.getCluster();

@@ -30,7 +30,7 @@ import java.nio.ByteBuffer;
 import io.mycat.backend.mysql.BufferUtil;
 import io.mycat.backend.mysql.StreamUtil;
 import io.mycat.net.BackendAIOConnection;
-import io.mycat.net.FrontendConnection;
+import io.mycat.net.plus.ClientConn;
 
 /**
  * @author mycat
@@ -55,7 +55,7 @@ public class BinaryPacket extends MySQLPacket {
     }
 
     @Override
-    public ByteBuffer write(ByteBuffer buffer, FrontendConnection c,boolean writeSocketIfFull) {
+    public ByteBuffer write(ByteBuffer buffer, ClientConn c,boolean writeSocketIfFull) {
         buffer = c.checkWriteBuffer(buffer, c.getPacketHeaderSize(),writeSocketIfFull);
         BufferUtil.writeUB3(buffer, calcPacketSize());
         buffer.put(packetId);

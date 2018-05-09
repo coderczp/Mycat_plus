@@ -24,14 +24,14 @@
 package io.mycat.manager.handler;
 
 import static io.mycat.route.parser.ManagerParseSelect.SESSION_AUTO_INCREMENT;
-import static io.mycat.route.parser.ManagerParseSelect.VERSION_COMMENT;
 import static io.mycat.route.parser.ManagerParseSelect.SESSION_TX_READ_ONLY;
+import static io.mycat.route.parser.ManagerParseSelect.VERSION_COMMENT;
 
 import io.mycat.config.ErrorCode;
-import io.mycat.manager.ManagerConnection;
 import io.mycat.manager.response.SelectSessionAutoIncrement;
 import io.mycat.manager.response.SelectSessionTxReadOnly;
 import io.mycat.manager.response.SelectVersionComment;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.route.parser.ManagerParseSelect;
 
 /**
@@ -39,7 +39,7 @@ import io.mycat.route.parser.ManagerParseSelect;
  */
 public final class SelectHandler {
 
-    public static void handle(String stmt, ManagerConnection c, int offset) {
+    public static void handle(String stmt, ClientConn c, int offset) {
         switch (ManagerParseSelect.parse(stmt, offset)) {
         case VERSION_COMMENT:
             SelectVersionComment.execute(c);
@@ -51,7 +51,7 @@ public final class SelectHandler {
         	SelectSessionTxReadOnly.execute(c);
         	break;
         default:
-            c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement");
+            c.writeErrMessage((byte)1,ErrorCode.ER_YES, "Unsupported statement");
         }
     }
 

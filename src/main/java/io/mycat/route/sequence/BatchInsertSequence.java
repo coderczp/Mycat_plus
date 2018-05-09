@@ -1,7 +1,7 @@
 package io.mycat.route.sequence;
 
-import io.mycat.route.sequence.handler.*;
-import org.slf4j.Logger; import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
@@ -17,11 +17,15 @@ import io.mycat.config.ErrorCode;
 import io.mycat.config.model.SchemaConfig;
 import io.mycat.config.model.SystemConfig;
 import io.mycat.config.model.TableConfig;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.route.RouteResultset;
 import io.mycat.route.RouteResultsetNode;
 import io.mycat.route.factory.RouteStrategyFactory;
-import io.mycat.server.ServerConnection;
-import io.mycat.server.parser.ServerParse;
+import io.mycat.route.sequence.handler.IncrSequenceMySQLHandler;
+import io.mycat.route.sequence.handler.IncrSequencePropHandler;
+import io.mycat.route.sequence.handler.IncrSequenceTimeHandler;
+import io.mycat.route.sequence.handler.SequenceHandler;
+import io.mycat.server.parser.SimpleSqlParser;
 import io.mycat.sqlengine.EngineCtx;
 import io.mycat.util.StringUtil;
 
@@ -42,7 +46,7 @@ public class BatchInsertSequence implements Catlet {
 	private SchemaConfig schema;
 	private int sqltype; 
 	private String charset; 
-	private ServerConnection sc;
+	private ClientConn sc;
 	private LayerCachePool cachePool;
 
 	@Override
@@ -52,7 +56,7 @@ public class BatchInsertSequence implements Catlet {
 			RouteResultsetNode[] nodes = rrs.getNodes();
 			if (nodes == null || nodes.length == 0 || nodes[0].getName() == null
 					|| nodes[0].getName().equals("")) {
-				ctx.getSession().getSource().writeErrMessage(ErrorCode.ER_NO_DB_ERROR,
+				ctx.getSession().getSource().writeErrMessage((byte)1,ErrorCode.ER_NO_DB_ERROR,
 						"No dataNode found ,please check tables defined in schema:"
 								+ ctx.getSession().getSource().getSchema());
 				return;
@@ -67,9 +71,9 @@ public class BatchInsertSequence implements Catlet {
 
 	@Override
 	public void route(SystemConfig sysConfig, SchemaConfig schema, int sqlType,
-			String realSQL, String charset, ServerConnection sc,
+			String realSQL, String charset, ClientConn sc,
 			LayerCachePool cachePool) {
-		int rs = ServerParse.parse(realSQL);
+		int rs = SimpleSqlParser.parse(realSQL);
 		this.sqltype = rs & 0xff;
 		this.sysConfig=sysConfig; 
 		this.schema=schema;

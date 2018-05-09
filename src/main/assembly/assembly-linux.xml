@@ -1,8 +1,6 @@
-<assembly
-	xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
-	<id>${timestamp}-linux</id>
+	<id>linux</id>
 	<includeBaseDirectory>false</includeBaseDirectory>
 	<formats>
 		<format>tar.gz</format>
@@ -11,8 +9,8 @@
 		<fileSet>
 			<directory>target/generated-resources/appassembler/jsw/mycat/bin</directory>
 			<outputDirectory>mycat/bin</outputDirectory>
-            <fileMode>0755</fileMode>
-            <includes>
+			<fileMode>0755</fileMode>
+			<includes>
 				<include>mycat</include>
 				<include>wrapper-linux*</include>
 			</includes>
@@ -40,13 +38,13 @@
 				<exclude>log4j*</exclude>
 			</excludes>
 		</fileSet>
-        <fileSet>
-            <directory>${basedir}</directory>
-            <outputDirectory>mycat/</outputDirectory>
-            <includes>
-                <include>version.txt</include>
-            </includes>
-        </fileSet>
+		<fileSet>
+			<directory>${basedir}</directory>
+			<outputDirectory>mycat/</outputDirectory>
+			<includes>
+				<include>version.txt</include>
+			</includes>
+		</fileSet>
 		<fileSet>
 			<directory>src/main/assembly/conf</directory>
 			<outputDirectory>mycat/conf</outputDirectory>
@@ -57,7 +55,7 @@
 			<fileMode>0755</fileMode>
 			<includes>
 				<include>*.sh</include>
-            </includes>
+			</includes>
 		</fileSet>
 		<fileSet>
 			<directory>${basedir}/logs</directory>
@@ -66,13 +64,20 @@
 				<exclude>**/*</exclude>
 			</excludes>
 		</fileSet>
-        <fileSet>
-            <directory>${basedir}/catlet</directory>
-            <outputDirectory>mycat/catlet</outputDirectory>
-            <excludes>
-                <exclude>**/*</exclude>
-            </excludes>
-        </fileSet>
+		<fileSet>
+			<directory>${basedir}/catlet</directory>
+			<outputDirectory>mycat/catlet</outputDirectory>
+			<excludes>
+				<exclude>**/*</exclude>
+			</excludes>
+		</fileSet>
+		<fileSet>
+			<directory>${basedir}/conf/web</directory>
+			<outputDirectory>mycat/conf/web</outputDirectory>
+			<includes>
+				<include>**/*</include>
+			</includes>
+		</fileSet>
 	</fileSets>
 
 </assembly>

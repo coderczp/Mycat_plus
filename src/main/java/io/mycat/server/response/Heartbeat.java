@@ -23,14 +23,15 @@
  */
 package io.mycat.server.response;
 
-import org.slf4j.Logger; import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.mycat.MycatServer;
 import io.mycat.config.ErrorCode;
 import io.mycat.net.mysql.ErrorPacket;
 import io.mycat.net.mysql.HeartbeatPacket;
 import io.mycat.net.mysql.OkPacket;
-import io.mycat.server.ServerConnection;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.util.TimeUtil;
 
 /**
@@ -40,7 +41,7 @@ public class Heartbeat {
 
     private static final Logger HEARTBEAT = LoggerFactory.getLogger("heartbeat");
 
-    public static void response(ServerConnection c, byte[] data) {
+    public static void response(ClientConn c, byte[] data) {
         HeartbeatPacket hp = new HeartbeatPacket();
         hp.read(data);
         if (MycatServer.getInstance().isOnline()) {
@@ -64,7 +65,7 @@ public class Heartbeat {
         }
     }
 
-    private static String responseMessage(String action, ServerConnection c, long id) {
+    private static String responseMessage(String action, ClientConn c, long id) {
         return new StringBuilder("RESPONSE:").append(action).append(", id=").append(id).append(", host=")
                 .append(c.getHost()).append(", port=").append(c.getPort()).append(", time=")
                 .append(TimeUtil.currentTimeMillis()).toString();

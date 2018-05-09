@@ -29,6 +29,7 @@ import io.mycat.backend.mysql.BufferUtil;
 import io.mycat.backend.mysql.MySQLMessage;
 import io.mycat.buffer.BufferArray;
 import io.mycat.net.FrontendConnection;
+import io.mycat.net.plus.ClientConn;
 
 /**
  * From Server To Client, part of Result Set Packets. One for each column in the
@@ -95,7 +96,7 @@ public class FieldPacket extends MySQLPacket {
 	}
 
 	@Override
-	public ByteBuffer write(ByteBuffer buffer, FrontendConnection c,
+	public ByteBuffer write(ByteBuffer buffer, ClientConn c,
 			boolean writeSocketIfFull) {
 		int size = calcPacketSize();
 		buffer = c.checkWriteBuffer(buffer, c.getPacketHeaderSize() + size,

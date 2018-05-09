@@ -26,17 +26,17 @@ package io.mycat.server.response;
 import java.nio.ByteBuffer;
 
 import io.mycat.backend.mysql.PreparedStatement;
-import io.mycat.net.FrontendConnection;
 import io.mycat.net.mysql.EOFPacket;
 import io.mycat.net.mysql.FieldPacket;
 import io.mycat.net.mysql.PreparedOkPacket;
+import io.mycat.net.plus.ClientConn;
 
 /**
  * @author mycat
  */
 public class PreparedStmtResponse {
 
-    public static void response(PreparedStatement pstmt, FrontendConnection c) {
+    public static void response(PreparedStatement pstmt, ClientConn c) {
         byte packetId = 0;
 
         // write preparedOk packet

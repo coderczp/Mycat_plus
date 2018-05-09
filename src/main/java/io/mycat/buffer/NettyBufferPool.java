@@ -1,16 +1,16 @@
 package io.mycat.buffer;
 
 
+import java.nio.ByteBuffer;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PoolArenaMetric;
 import io.netty.buffer.PoolChunkListMetric;
 import io.netty.buffer.PoolChunkMetric;
 import io.netty.util.internal.PlatformDependent;
-
-import java.nio.ByteBuffer;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 封装netty pooled Direct Memory 接口，为mycat提供内存分配功能
@@ -92,7 +92,8 @@ public class NettyBufferPool implements BufferPool {
                 for (PoolChunkListMetric pck : pcks) {
                     Iterator<PoolChunkMetric> it = pck.iterator();
                     while (it.hasNext()) {
-                        PoolChunkMetric p = it.next();
+                        //PoolChunkMetric p = it.next();
+                        it.next();
                         chunkCount++;
                     }
                 }

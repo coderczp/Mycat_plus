@@ -27,11 +27,12 @@ import static io.mycat.server.parser.ServerParseSet.CHARACTER_SET_CLIENT;
 import static io.mycat.server.parser.ServerParseSet.CHARACTER_SET_CONNECTION;
 import static io.mycat.server.parser.ServerParseSet.CHARACTER_SET_RESULTS;
 
-import org.slf4j.Logger; import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.mycat.config.ErrorCode;
 import io.mycat.net.mysql.OkPacket;
-import io.mycat.server.ServerConnection;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.server.parser.ServerParseSet;
 import io.mycat.util.SetIgnoreUtil;
 import io.mycat.util.SplitUtil;
@@ -46,7 +47,7 @@ public class CharacterSet {
 
     private static final Logger logger = LoggerFactory.getLogger(CharacterSet.class);
 
-    public static void response(String stmt, ServerConnection c, int rs) {
+    public static void response(String stmt, ClientConn c, int rs) {
         if (-1 == stmt.indexOf(',')) {
             /* 单个属性 */
             oneSetResponse(stmt, c, rs);
@@ -56,7 +57,7 @@ public class CharacterSet {
         }
     }
 
-    private static void oneSetResponse(String stmt, ServerConnection c, int rs) {
+    private static void oneSetResponse(String stmt, ClientConn c, int rs) {
         if ((rs & 0xff) == CHARACTER_SET_CLIENT) {
             /* 忽略client属性设置 */
             c.write(c.writeToBuffer(OkPacket.OK, c.allocate()));
@@ -77,7 +78,7 @@ public class CharacterSet {
         }
     }
 
-    private static void multiSetResponse(String stmt, ServerConnection c, int rs) {
+    private static void multiSetResponse(String stmt, ClientConn c, int rs) {
         String charResult = "null";
         String charConnection = "null";
         String[] sqlList = SplitUtil.split(stmt, ',', false);
@@ -140,11 +141,11 @@ public class CharacterSet {
             StringBuilder sb = new StringBuilder();
             sb.append("charset is not consistent:[connection=").append(charConnection);
             sb.append(",results=").append(charResult).append(']');
-            c.writeErrMessage(ErrorCode.ER_UNKNOWN_CHARACTER_SET, sb.toString());
+            c.writeErrMessage((byte)1,ErrorCode.ER_UNKNOWN_CHARACTER_SET, sb.toString());
         }
     }
 
-    private static void setCharset(String charset, ServerConnection c) {
+    private static void setCharset(String charset, ClientConn c) {
         if ("null".equalsIgnoreCase(charset)) {
             /* 忽略字符集为null的属性设置 */
             c.write(c.writeToBuffer(OkPacket.OK, c.allocate()));
@@ -155,10 +156,10 @@ public class CharacterSet {
                 if (c.setCharsetIndex(Integer.parseInt(charset))) {
                     c.write(c.writeToBuffer(OkPacket.OK, c.allocate()));
                 } else {
-                    c.writeErrMessage(ErrorCode.ER_UNKNOWN_CHARACTER_SET, "Unknown charset :" + charset);
+                    c.writeErrMessage((byte)1,ErrorCode.ER_UNKNOWN_CHARACTER_SET, "Unknown charset :" + charset);
                 }
             } catch (RuntimeException e) {
-                c.writeErrMessage(ErrorCode.ER_UNKNOWN_CHARACTER_SET, "Unknown charset :" + charset);
+                c.writeErrMessage((byte)1,ErrorCode.ER_UNKNOWN_CHARACTER_SET, "Unknown charset :" + charset);
             }
         }
     }

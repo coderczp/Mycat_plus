@@ -29,7 +29,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.slf4j.Logger; import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.mycat.MycatServer;
 import io.mycat.backend.BackendConnection;
@@ -38,9 +39,11 @@ import io.mycat.cache.CachePool;
 import io.mycat.config.MycatConfig;
 import io.mycat.net.mysql.ErrorPacket;
 import io.mycat.net.mysql.RowDataPacket;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.route.RouteResultsetNode;
-import io.mycat.server.ServerConnection;
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.NonBlockingSession;
+import io.mycat.server.Session;
+import io.mycat.server.handler.plus.SQLHandler;
 
 /**
  * company where id=(select company_id from customer where id=3); the one which
@@ -58,7 +61,7 @@ public class FetchStoreNodeOfChildTableHandler implements ResponseHandler {
 	private AtomicInteger finished = new AtomicInteger(0);
 	protected final ReentrantLock lock = new ReentrantLock();
 	
-	public String execute(String schema, String sql, List<String> dataNodes, ServerConnection sc) {
+	public String execute(String schema, String sql, List<String> dataNodes, ClientConn sc) {
 		
 		String key = schema + ":" + sql;
 		CachePool cache = MycatServer.getInstance().getCacheService()
@@ -71,7 +74,7 @@ public class FetchStoreNodeOfChildTableHandler implements ResponseHandler {
 		int totalCount = dataNodes.size();
 		long startTime = System.currentTimeMillis();
 		long endTime = startTime + 5 * 60 * 1000L;
-		MycatConfig conf = MycatServer.getInstance().getConfig();
+		MycatConfig conf = sc.getSession2().getCurrentConfig();
 
 		LOGGER.debug("find child node with sql:" + sql);
 		for (String dn : dataNodes) {
@@ -83,7 +86,7 @@ public class FetchStoreNodeOfChildTableHandler implements ResponseHandler {
 				if (LOGGER.isDebugEnabled()) {
 					LOGGER.debug("execute in datanode " + dn);
 				}
-				RouteResultsetNode node = new RouteResultsetNode(dn, ServerParse.SELECT, sql);
+				RouteResultsetNode node = new RouteResultsetNode(dn, SQLHandler.Type.SELECT, sql);
 				node.setRunOnSlave(false);	// 获取 子表节点，最好走master为好
 
 				/*
@@ -91,7 +94,9 @@ public class FetchStoreNodeOfChildTableHandler implements ResponseHandler {
 				 * Tips: 通过mysqlDN.getConnection获取到的连接不是当前连接
 				 *
 				 */
-				BackendConnection conn = sc.getSession2().getTarget(node);
+				//TODO 换成session接口
+				NonBlockingSession session2 = (NonBlockingSession) sc.getSession2();
+                BackendConnection conn = session2.getTarget(node);
 				if(sc.getSession2().tryExistsCon(conn, node)) {
 					_execute(conn, node, sc);
 				} else {
@@ -143,7 +148,7 @@ public class FetchStoreNodeOfChildTableHandler implements ResponseHandler {
 				if (LOGGER.isDebugEnabled()) {
 					LOGGER.debug("execute in datanode " + dn);
 				}
-				RouteResultsetNode node = new RouteResultsetNode(dn, ServerParse.SELECT, sql);
+				RouteResultsetNode node = new RouteResultsetNode(dn, SQLHandler.Type.SELECT, sql);
 				node.setRunOnSlave(false);	// 获取 子表节点，最好走master为好
 
 				mysqlDN.getConnection(mysqlDN.getDatabase(), true, node, this, node);
@@ -178,7 +183,7 @@ public class FetchStoreNodeOfChildTableHandler implements ResponseHandler {
 
 	}
 	
-	private void _execute(BackendConnection conn, RouteResultsetNode node, ServerConnection sc) {
+	private void _execute(BackendConnection conn, RouteResultsetNode node, ClientConn sc) {
 		conn.setResponseHandler(this);
 		try {
 			conn.execute(node, sc, sc.isAutocommit());

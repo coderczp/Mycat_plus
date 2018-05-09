@@ -57,8 +57,8 @@ public final class SystemConfig {
 	private final static String SPILLS_FILE_BUFFER_SIZE = "2K";
 	private final static String DATANODE_SORTED_TEMP_DIR = "datanode";
 	private int backSocketSoSndbuf = 1024 * 1024;
-	private int frontSocketNoDelay = 1; // 0=false
-	private int backSocketNoDelay = 1; // 1=true
+	private boolean frontSocketNoDelay = false; 
+	private boolean backSocketNoDelay = false; // 1=true
 	public static final int DEFAULT_POOL_SIZE = 128;// 保持后端数据通道的默认最大值
 	public static final long DEFAULT_IDLE_TIMEOUT = 30 * 60 * 1000L;
 	private static final long DEFAULT_PROCESSOR_CHECK_PERIOD = 1 * 1000L;
@@ -129,6 +129,7 @@ public final class SystemConfig {
 	public static final int SEQUENCEHANDLER_LOCAL_TIME = 2;
 	public static final int SEQUENCEHANDLER_ZK_DISTRIBUTED = 3;
 	public static final int SEQUENCEHANDLER_ZK_GLOBAL_INCREMENT = 4;
+	public static final int SNOWFLAKE_SEQUENCEHANDLER = 5;
 	/*
 	 * 注意！！！ 目前mycat支持的MySQL版本，如果后续有新的MySQL版本,请添加到此数组， 对于MySQL的其他分支，
 	 * 比如MariaDB目前版本号已经到10.1.x，但是其驱动程序仍然兼容官方的MySQL,因此这里版本号只需要MySQL官方的版本号即可。
@@ -235,7 +236,19 @@ public final class SystemConfig {
 
 	private final static int DEFAULT_NONEPASSWORDLOGIN = 0;
 	
-	public String getDefaultSqlParser() {
+	/**是否支持多版本配,如果支持,客户端连接后要根据客户端传来的版本号进行切换,目前支持库级多版本*/
+	private  boolean SupportMultiVersion = false;
+	
+	
+	public boolean isSupportMultiVersion() {
+        return SupportMultiVersion;
+    }
+
+    public void setSupportMultiVersion(boolean supportMultiVersion) {
+        SupportMultiVersion = supportMultiVersion;
+    }
+
+    public String getDefaultSqlParser() {
 		return defaultSqlParser;
 	}
 
@@ -280,7 +293,7 @@ public final class SystemConfig {
 		this.useStreamOutput = 0;
 		this.systemReserveMemorySize = RESERVED_SYSTEM_MEMORY_BYTES;
 		this.dataNodeSortedTempDir = System.getProperty("user.dir");
-		this.XARecoveryLogBaseDir = SystemConfig.getHomePath()+"/tmlogs/";
+		this.XARecoveryLogBaseDir = SystemConfig.getHomePath()+"/xatmp/";
 		this.XARecoveryLogBaseName ="tmlog";
 	}
 
@@ -768,19 +781,19 @@ public final class SystemConfig {
 		this.backSocketSoSndbuf = backSocketSoSndbuf;
 	}
 
-	public int getFrontSocketNoDelay() {
+	public boolean getFrontSocketNoDelay() {
 		return frontSocketNoDelay;
 	}
 
-	public void setFrontSocketNoDelay(int frontSocketNoDelay) {
+	public void setFrontSocketNoDelay(boolean frontSocketNoDelay) {
 		this.frontSocketNoDelay = frontSocketNoDelay;
 	}
 
-	public int getBackSocketNoDelay() {
+	public boolean getBackSocketNoDelay() {
 		return backSocketNoDelay;
 	}
 
-	public void setBackSocketNoDelay(int backSocketNoDelay) {
+	public void setBackSocketNoDelay(boolean backSocketNoDelay) {
 		this.backSocketNoDelay = backSocketNoDelay;
 	}
 

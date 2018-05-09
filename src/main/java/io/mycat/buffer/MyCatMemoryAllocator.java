@@ -1,16 +1,15 @@
 package io.mycat.buffer;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.util.internal.PlatformDependent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.nio.ByteBuffer;
-import java.util.concurrent.*;
 
 /**
  * Netty Direct Memory 分配器，为mycat提供内存池管理功能
@@ -21,52 +20,43 @@ import java.util.concurrent.*;
 
 public class MyCatMemoryAllocator implements ByteBufAllocator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MyCatMemoryAllocator.class);
-    public final ConcurrentHashMap<Long,ByteBuf> recycleMaps = new ConcurrentHashMap<>();
+    private static final Logger                   LOGGER      = LoggerFactory.getLogger(MyCatMemoryAllocator.class);
+    public final ConcurrentHashMap<Long, ByteBuf> recycleMaps = new ConcurrentHashMap<>();
 
-    private final static MyCatMemoryAllocator INSTANCE =
-           new MyCatMemoryAllocator(Runtime.getRuntime().availableProcessors()*2);
+    private final static MyCatMemoryAllocator     INSTANCE    = new MyCatMemoryAllocator(
+        Runtime.getRuntime().availableProcessors() * 2);
 
     /** netty memory pool alloctor*/
-    private final PooledByteBufAllocator alloc;
+    private final PooledByteBufAllocator          alloc;
     /**arena 的数量，一般设置cpu cores*2 */
-    private final int numberOfArenas;
+    private final int                             numberOfArenas;
 
     /** ChunkSize 大小 = pageSize << maxOrder */
-    private final int chunkSize;
+    private final int                             chunkSize;
 
     /**页大小*/
-    private final int pageSize;
+    private final int                             pageSize;
 
     /**
      * numberOfArenas 设置为处理器cores*2
      * @param numberOfArenas
      */
-    public MyCatMemoryAllocator(int numberOfArenas){
+    public MyCatMemoryAllocator(int numberOfArenas) {
         this.numberOfArenas = numberOfArenas;
         if (!PlatformDependent.hasUnsafe()) {
-           LOGGER.warn("Using direct memory, but sun.misc.Unsafe not available.");
+            LOGGER.warn("Using direct memory, but sun.misc.Unsafe not available.");
         }
         boolean preferDirect = true;
 
-        this.pageSize = 8192*2;
+        this.pageSize = 8192 * 2;
         int maxOrder = 11;
         this.chunkSize = pageSize << maxOrder;
         int numDirectArenas = numberOfArenas;
         int numHeapArenas = 0;
 
         /** for 4.1.x*/
-        this.alloc = new PooledByteBufAllocator(
-                preferDirect,
-                numHeapArenas,
-                numDirectArenas,
-                pageSize,
-                maxOrder,
-                512,
-                256,
-                64,
-                true);
-
+        this.alloc = new PooledByteBufAllocator(preferDirect, numHeapArenas, numDirectArenas, pageSize, maxOrder, 512,
+            256, 64, true);
 
         /**for 5.0.x
         this.alloc = new PooledByteBufAllocator(preferDirect);**/
@@ -108,7 +98,6 @@ public class MyCatMemoryAllocator implements ByteBufAllocator {
     public int getPageSize() {
         return pageSize;
     }
-
 
     @Override
     public ByteBuf buffer() {

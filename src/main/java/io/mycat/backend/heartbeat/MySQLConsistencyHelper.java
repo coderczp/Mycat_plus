@@ -23,20 +23,20 @@
  */
 package io.mycat.backend.heartbeat;
 
-import io.mycat.server.interceptor.impl.GlobalTableUtil;
-import io.mycat.sqlengine.SQLJob;
-import io.mycat.sqlengine.SQLQueryResult;
-import io.mycat.sqlengine.SQLQueryResultListener;
-
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
+
+import io.mycat.server.interceptor.impl.GlobalTableUtil;
+import io.mycat.sqlengine.SQLJob;
+import io.mycat.sqlengine.SQLQueryResult;
+import io.mycat.sqlengine.SQLQueryResultListener;
+import io.mycat.util.StringUtil;
 
 /**
  * @author digdeep@126.com
@@ -79,9 +79,9 @@ public class MySQLConsistencyHelper implements SQLQueryResultListener<SQLQueryRe
             maxTimestamp = rowMap.get(GlobalTableUtil.MAX_COLUMN);
             count = rowMap.get(GlobalTableUtil.COUNT_COLUMN);
             innerCol = rowMap.get(GlobalTableUtil.INNER_COLUMN);
-            if ((rowMap.containsKey(GlobalTableUtil.MAX_COLUMN) && StringUtils.isNotBlank(maxTimestamp))
-                || (rowMap.containsKey(GlobalTableUtil.COUNT_COLUMN) && StringUtils.isNotBlank(count))
-                || (rowMap.containsKey(GlobalTableUtil.INNER_COLUMN) && StringUtils.isNotBlank(innerCol))) {
+            if ((rowMap.containsKey(GlobalTableUtil.MAX_COLUMN) && StringUtil.isNotBlank(maxTimestamp))
+                || (rowMap.containsKey(GlobalTableUtil.COUNT_COLUMN) && StringUtil.isNotBlank(count))
+                || (rowMap.containsKey(GlobalTableUtil.INNER_COLUMN) && StringUtil.isNotBlank(innerCol))) {
                 heartbeat.setResult(result);
                 return;
             } else {

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
+import com.alibaba.druid.sql.ast.SQLLimit;
 import com.alibaba.druid.sql.ast.SQLOrderBy;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.expr.SQLAggregateExpr;
@@ -40,7 +41,7 @@ public class DruidSelectSqlServerParser extends DruidSelectParser {
 		//从mysql解析过来
 		if(sqlSelectQuery instanceof MySqlSelectQueryBlock) {
 			MySqlSelectQueryBlock mysqlSelectQuery = (MySqlSelectQueryBlock)selectStmt.getSelect().getQuery();
-			MySqlSelectQueryBlock.Limit limit=mysqlSelectQuery.getLimit();
+			SQLLimit limit=mysqlSelectQuery.getLimit();
 			if(limit==null)
 			{
                 sqlserverParse(schema, rrs);

@@ -26,8 +26,8 @@ package io.mycat.manager.handler;
 import static io.mycat.route.parser.ManagerParseSwitch.DATASOURCE;
 
 import io.mycat.config.ErrorCode;
-import io.mycat.manager.ManagerConnection;
 import io.mycat.manager.response.SwitchDataSource;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.route.parser.ManagerParseSwitch;
 
 /**
@@ -35,13 +35,13 @@ import io.mycat.route.parser.ManagerParseSwitch;
  */
 public final class SwitchHandler {
 
-    public static void handler(String stmt, ManagerConnection c, int offset) {
+    public static void handler(String stmt, ClientConn c, int offset) {
         switch (ManagerParseSwitch.parse(stmt, offset)) {
         case DATASOURCE:
             SwitchDataSource.response(stmt, c);
             break;
         default:
-            c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement");
+            c.writeErrMessage((byte)1,ErrorCode.ER_YES, "Unsupported statement");
         }
     }
 

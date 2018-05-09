@@ -48,7 +48,6 @@ public class UserTableSelectJob implements Runnable, SelectJob {
 	public UserTableSelectJob(Connection con,
 			LinkedList<StringItem> sqlTemplateItems, int executeTimes,
 			AtomicInteger finshiedCount, AtomicInteger failedCount) {
-		super();
 		this.con = con;
 		this.sqlTemplateItems = sqlTemplateItems;
 		this.executeTimes = executeTimes;

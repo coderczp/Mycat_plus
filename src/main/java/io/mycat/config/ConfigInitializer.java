@@ -37,9 +37,6 @@ import io.mycat.backend.datasource.PhysicalDatasource;
 import io.mycat.backend.jdbc.JDBCDatasource;
 import io.mycat.backend.mysql.nio.MySQLDataSource;
 import io.mycat.config.loader.ConfigLoader;
-import io.mycat.config.loader.SchemaLoader;
-import io.mycat.config.loader.xml.XMLConfigLoader;
-import io.mycat.config.loader.xml.XMLSchemaLoader;
 import io.mycat.config.model.DBHostConfig;
 import io.mycat.config.model.DataHostConfig;
 import io.mycat.config.model.DataNodeConfig;
@@ -56,7 +53,7 @@ import io.mycat.route.sequence.handler.IncrSequenceTimeHandler;
  */
 public class ConfigInitializer {
 
-    private static final Logger                  LOGGER =  LoggerFactory.getLogger(ConfigInitializer.class);
+    private static final Logger                  LOGGER = LoggerFactory.getLogger(ConfigInitializer.class);
 
     private volatile SystemConfig                system;
     private volatile MycatCluster                cluster;
@@ -65,17 +62,24 @@ public class ConfigInitializer {
     private volatile Map<String, SchemaConfig>   schemas;
     private volatile Map<String, PhysicalDBNode> dataNodes;
     private volatile Map<String, PhysicalDBPool> dataHosts;
+    private volatile ConfigLoader                configLoader;
 
-    public ConfigInitializer(boolean loadDataHost) {
+    public ConfigInitializer(ConfigLoader configLoader, boolean loadDataHost) {
+        this.configLoader = configLoader;
+        reload(loadDataHost);
+    }
+    
+    public ConfigLoader getConfigLoader() {
+        return configLoader;
+    }
 
-        //读取rule.xml和schema.xml
-        SchemaLoader schemaLoader = new XMLSchemaLoader();
 
-        //读取server.xml
-        XMLConfigLoader configLoader = new XMLConfigLoader(schemaLoader);
-
-        schemaLoader = null;
-
+    /***
+     * 重建配置
+     * 
+     * @param loadDataHost
+     */
+    public void reload(boolean loadDataHost) {
         //加载配置
         this.system = configLoader.getSystemConfig();
         this.users = configLoader.getUserConfigs();

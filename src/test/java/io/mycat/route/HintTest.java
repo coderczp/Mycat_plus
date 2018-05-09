@@ -18,7 +18,7 @@ import io.mycat.route.RouteResultset;
 import io.mycat.route.RouteService;
 import io.mycat.route.RouteStrategy;
 import io.mycat.route.factory.RouteStrategyFactory;
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
 
 public class HintTest {
 	protected Map<String, SchemaConfig> schemaMap;
@@ -46,17 +46,17 @@ public class HintTest {
         String sql = "/*!mycat: sql = select * from employee where sharding_id = 10010 */select * from employee";
         CacheService cacheService = new CacheService();
         RouteService routerService = new RouteService(cacheService);
-        RouteResultset rrs = routerService.route(new SystemConfig(), schema, ServerParse.SELECT, sql, "UTF-8", null);
+        RouteResultset rrs = routerService.route(new SystemConfig(), schema, SQLHandler.Type.SELECT, sql, "UTF-8", null);
         Assert.assertTrue(rrs.getNodes().length == 1);
 
         //使用注解（新注解，/*后面有空格），路由到1个节点
         sql = "/*#mycat: sql = select * from employee where sharding_id = 10000 */select * from employee";
-        rrs = routerService.route(new SystemConfig(), schema, ServerParse.SELECT, sql, "UTF-8", null);
+        rrs = routerService.route(new SystemConfig(), schema, SQLHandler.Type.SELECT, sql, "UTF-8", null);
         Assert.assertTrue(rrs.getNodes().length == 1);
         
         //不用注解，路由到2个节点
         sql = "select * from employee";
-        rrs = routerService.route(new SystemConfig(), schema, ServerParse.SELECT, sql, "UTF-8", null);
+        rrs = routerService.route(new SystemConfig(), schema, SQLHandler.Type.SELECT, sql, "UTF-8", null);
         Assert.assertTrue(rrs.getNodes().length == 2);
     }
 }

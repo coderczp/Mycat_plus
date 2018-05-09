@@ -27,25 +27,20 @@ import java.io.IOException;
 import java.net.StandardSocketOptions;
 import java.nio.channels.NetworkChannel;
 
-import io.mycat.MycatServer;
-import io.mycat.net.FrontendConnection;
+import io.mycat.net.plus.ClientConn;
 
 /**
  * @author mycat
  */
 public abstract class FrontendConnectionFactory {
-	protected abstract FrontendConnection getConnection(NetworkChannel channel)
-			throws IOException;
 
-	public FrontendConnection make(NetworkChannel channel) throws IOException {
-		channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-		channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+    protected abstract ClientConn getConnection(NetworkChannel channel) throws IOException;
 
-		FrontendConnection c = getConnection(channel);
-		MycatServer.getInstance().getConfig().setSocketParams(c, true);
-		return c;
-	}
-
-	
+    public ClientConn make(NetworkChannel channel) throws IOException {
+        channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+        channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+        ClientConn c = getConnection(channel);
+        return c;
+    }
 
 }

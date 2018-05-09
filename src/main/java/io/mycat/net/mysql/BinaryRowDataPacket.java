@@ -7,15 +7,15 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.mycat.backend.mysql.BufferUtil;
 import io.mycat.config.Fields;
 import io.mycat.memory.unsafe.row.UnsafeRow;
-import io.mycat.net.FrontendConnection;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.util.ByteUtil;
 import io.mycat.util.DateUtil;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * ProtocolBinary::ResultsetRow:
@@ -247,14 +247,14 @@ public class BinaryRowDataPacket extends MySQLPacket {
 		
 	}
 	
-	public void write(FrontendConnection conn) {
+	public void write(ClientConn conn) {
 		
 		int size = calcPacketSize();
 		int packetHeaderSize = conn.getPacketHeaderSize();
 		int totalSize = size + packetHeaderSize;
 		ByteBuffer bb = null;
 		
-		bb = conn.getProcessor().getBufferPool().allocate(totalSize);
+		bb = conn.getBufferPool().allocate(totalSize);
 
 		BufferUtil.writeUB3(bb, calcPacketSize());
 		bb.put(packetId);
@@ -295,7 +295,7 @@ public class BinaryRowDataPacket extends MySQLPacket {
 	}
 	
 	@Override
-	public ByteBuffer write(ByteBuffer bb, FrontendConnection c,
+	public ByteBuffer write(ByteBuffer bb, ClientConn c,
 			boolean writeSocketIfFull) {
 		int size = calcPacketSize();
 		int packetHeaderSize = c.getPacketHeaderSize();

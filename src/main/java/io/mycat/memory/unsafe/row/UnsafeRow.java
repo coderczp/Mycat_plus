@@ -18,20 +18,20 @@
 package io.mycat.memory.unsafe.row;
 
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+
 import io.mycat.backend.mysql.BufferUtil;
 import io.mycat.memory.unsafe.Platform;
 import io.mycat.memory.unsafe.array.ByteArrayMethods;
 import io.mycat.memory.unsafe.bitset.BitSetMethods;
 import io.mycat.memory.unsafe.hash.Murmur3_x86_32;
 import io.mycat.memory.unsafe.types.UTF8String;
-import io.mycat.net.FrontendConnection;
 import io.mycat.net.mysql.MySQLPacket;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
+import io.mycat.net.plus.ClientConn;
 
 
 /**
@@ -391,7 +391,7 @@ public final class UnsafeRow extends MySQLPacket {
   public static final byte EMPTY_MARK = (byte) 0;
 
   @Override
-  public ByteBuffer write(ByteBuffer bb, FrontendConnection c,
+  public ByteBuffer write(ByteBuffer bb, ClientConn c,
                           boolean writeSocketIfFull) {
     bb = c.checkWriteBuffer(bb,c.getPacketHeaderSize(),writeSocketIfFull);
     BufferUtil.writeUB3(bb, calcPacketSize());

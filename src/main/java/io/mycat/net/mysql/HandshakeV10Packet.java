@@ -25,9 +25,9 @@ package io.mycat.net.mysql;
 
 import java.nio.ByteBuffer;
 
-import io.mycat.config.Capabilities;
 import io.mycat.backend.mysql.BufferUtil;
-import io.mycat.net.FrontendConnection;
+import io.mycat.config.Capabilities;
+import io.mycat.net.plus.ClientConn;
 
 /**
  * From mycat server to client during initial handshake.
@@ -79,7 +79,7 @@ public class HandshakeV10Packet extends MySQLPacket {
     public byte[] restOfScrambleBuff; // auth-plugin-data-part-2
     public byte[] authPluginName = DEFAULT_AUTH_PLUGIN_NAME;
 
-    public void write(FrontendConnection c) {
+    public void write(ClientConn c) {
 
     	ByteBuffer buffer = c.allocate();
         BufferUtil.writeUB3(buffer, calcPacketSize());

@@ -3,7 +3,7 @@ package io.mycat.statistic.stat;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicLong;
 
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
 
 /**
  * SQL R/W 执行状态
@@ -83,14 +83,14 @@ public class UserSqlRWStat {
 		
 	
 		switch(sqlType) {
-    	case ServerParse.SELECT:
-    	case ServerParse.SHOW:
+    	case SQLHandler.Type.SELECT:
+    	case SQLHandler.Type.SHOW:
     		this.rCount.incrementAndGet();
     		break;
-    	case ServerParse.UPDATE:
-    	case ServerParse.INSERT:
-    	case ServerParse.DELETE:
-    	case ServerParse.REPLACE:
+    	case SQLHandler.Type.UPDATE:
+    	case SQLHandler.Type.INSERT:
+    	case SQLHandler.Type.DELETE:
+    	case SQLHandler.Type.REPLACE:
     		this.wCount.incrementAndGet();
     		break;
     	}

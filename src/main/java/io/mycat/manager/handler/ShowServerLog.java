@@ -37,15 +37,14 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.mycat.MycatServer;
 import io.mycat.backend.mysql.PacketUtil;
 import io.mycat.config.Fields;
 import io.mycat.config.model.SystemConfig;
-import io.mycat.manager.ManagerConnection;
 import io.mycat.net.mysql.EOFPacket;
 import io.mycat.net.mysql.FieldPacket;
 import io.mycat.net.mysql.ResultSetHeaderPacket;
 import io.mycat.net.mysql.RowDataPacket;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.util.CircularArrayList;
 import io.mycat.util.StringUtil;
 
@@ -76,7 +75,7 @@ public final class ShowServerLog {
 		return file;
 	}
 
-	public static void handle(String stmt,ManagerConnection c) {
+	public static void handle(String stmt,ClientConn c) {
 
 		ByteBuffer buffer = c.allocate();
 
@@ -128,7 +127,7 @@ public final class ShowServerLog {
 		c.write(buffer);
 	}
 
-	public static PackageBufINf showLogRange(ManagerConnection c,
+	public static PackageBufINf showLogRange(ClientConn c,
 			ByteBuffer buffer, byte packetId, String key, String regex,
 			int start, int end, String logFile) {
 		PackageBufINf bufINf = new PackageBufINf();
@@ -185,7 +184,7 @@ public final class ShowServerLog {
 		return bufINf;
 	}
 
-	private static PackageBufINf showLogSum(ManagerConnection c,
+	private static PackageBufINf showLogSum(ClientConn c,
 			ByteBuffer buffer, byte packetId) {
 		PackageBufINf bufINf = new PackageBufINf();
 		File[] logFiles = new File(SystemConfig.getHomePath(), "logs")

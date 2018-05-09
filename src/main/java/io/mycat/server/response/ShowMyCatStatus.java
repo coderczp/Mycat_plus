@@ -33,7 +33,7 @@ import io.mycat.net.mysql.ErrorPacket;
 import io.mycat.net.mysql.FieldPacket;
 import io.mycat.net.mysql.ResultSetHeaderPacket;
 import io.mycat.net.mysql.RowDataPacket;
-import io.mycat.server.ServerConnection;
+import io.mycat.net.plus.ClientConn;
 
 /**
  * 加入了offline状态推送，用于心跳语句。
@@ -62,7 +62,7 @@ public class ShowMyCatStatus {
         lastEof.packetId = ++packetId;
     }
 
-    public static void response(ServerConnection c) {
+    public static void response(ClientConn c) {
         if (MycatServer.getInstance().isOnline()) {
             ByteBuffer buffer = c.allocate();
             buffer = header.write(buffer, c,true);

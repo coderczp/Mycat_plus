@@ -21,8 +21,8 @@ import io.mycat.net.mysql.EOFPacket;
 import io.mycat.net.mysql.FieldPacket;
 import io.mycat.net.mysql.ResultSetHeaderPacket;
 import io.mycat.net.mysql.RowDataPacket;
-import io.mycat.server.ServerConnection;
-import io.mycat.server.parser.ServerParse;
+import io.mycat.net.plus.ClientConn;
+import io.mycat.server.handler.plus.SQLHandler;
 import io.mycat.server.util.SchemaUtil;
 import io.mycat.util.StringUtil;
 
@@ -39,14 +39,14 @@ public class ShowTables {
     private static final EOFPacket eof = new EOFPacket();
     
     private static final String SCHEMA_KEY = "schemaName";
-    private static final String LIKE_KEY = "like";
+//    private static final String LIKE_KEY = "like";
     private static final   Pattern pattern = Pattern.compile("^\\s*(SHOW)\\s+(TABLES)(\\s+(FROM)\\s+([a-zA-Z_0-9]+))?(\\s+(LIKE\\s+'(.*)'))?\\s*",Pattern.CASE_INSENSITIVE);
 	
 	/**
 	 * response method.
 	 * @param c
 	 */
-	public static void response(ServerConnection c,String stmt,int type) {
+	public static void response(ClientConn c,String stmt,int type) {
         String showSchemal= SchemaUtil.parseShowTableSchema(stmt) ;
         String cSchema =showSchemal==null? c.getSchema():showSchemal;
         SchemaConfig schema = MycatServer.getInstance().getConfig().getSchemas().get(cSchema);
@@ -54,11 +54,11 @@ public class ShowTables {
         	//不分库的schema，show tables从后端 mysql中查
             String node = schema.getDataNode();
             if(!Strings.isNullOrEmpty(node)) {
-            	c.execute(stmt, ServerParse.SHOW);
+            	c.execute(stmt, SQLHandler.Type.SHOW);
                 return;
             }
         } else {
-             c.writeErrMessage(ErrorCode.ER_NO_DB_ERROR,"No database selected");
+             c.writeErrMessage((byte)1,ErrorCode.ER_NO_DB_ERROR,"No database selected");
              return;
         }
 
@@ -106,7 +106,7 @@ public class ShowTables {
 		
     }
 
-    public static Set<String> getTableSet(ServerConnection c, String stmt)
+    public static Set<String> getTableSet(ClientConn c, String stmt)
     {
         Map<String,String> parm = buildFields(c,stmt);
        return getTableSet(c, parm);
@@ -114,7 +114,7 @@ public class ShowTables {
     }
 
 
-    private static Set<String> getTableSet(ServerConnection c, Map<String, String> parm)
+    private static Set<String> getTableSet(ClientConn c, Map<String, String> parm)
     {
         TreeSet<String> tableSet = new TreeSet<String>();
         MycatConfig conf = MycatServer.getInstance().getConfig();
@@ -158,7 +158,7 @@ public class ShowTables {
 	 * @param c
 	 * @param stmt
 	 */
-	private static Map<String,String> buildFields(ServerConnection c,String stmt) {
+	private static Map<String,String> buildFields(ClientConn c,String stmt) {
 	 
 		Map<String,String> map = new HashMap<String, String>();
 

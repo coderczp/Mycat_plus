@@ -41,14 +41,15 @@ import io.mycat.net.mysql.EOFPacket;
 import io.mycat.net.mysql.FieldPacket;
 import io.mycat.net.mysql.ResultSetHeaderPacket;
 import io.mycat.net.mysql.RowDataPacket;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.server.NonBlockingSession;
-import io.mycat.server.ServerConnection;
 import io.mycat.util.StringUtil;
 
 /**
  * @author mycat
  */
 public final class ShowVariables {
+    
     private static final Logger                LOGGER      = LoggerFactory.getLogger(ShowVariables.class);
     private static final int                   FIELD_COUNT = 2;
     private static final ResultSetHeaderPacket header      = PacketUtil.getHeader(FIELD_COUNT);
@@ -56,6 +57,7 @@ public final class ShowVariables {
     private static final EOFPacket             eof         = new EOFPacket();
     private static final Pattern               pattern     = Pattern.compile("(?:like|=)\\s*'([^']*(?:\\w+)+[^']*)+'",
         Pattern.CASE_INSENSITIVE);
+
     static {
         int i = 0;
         byte packetId = 0;
@@ -79,7 +81,7 @@ public final class ShowVariables {
         return variableList;
     }
 
-    public static void execute(ServerConnection c, String sql) {
+    public static void execute(ClientConn c, String sql) {
         ByteBuffer buffer = c.allocate();
 
         // write header
@@ -115,7 +117,7 @@ public final class ShowVariables {
         c.write(buffer);
     }
 
-    public static void justReturnValue(ServerConnection c, String value) {
+    public static void justReturnValue(ClientConn c, String value) {
         ByteBuffer buffer = c.allocate();
 
         // write header
@@ -177,15 +179,17 @@ public final class ShowVariables {
         variables.put("wait_timeout", "172800");
     }
 
-    public static void execute(ServerConnection sc, String orgin, BackendConnection jdbcConnection) {
+    public static void execute(ClientConn sc, String orgin, BackendConnection jdbcConnection) {
         execute(sc, orgin);
-        NonBlockingSession session = sc.getSession2();
+        //TODO 缓存session接口
+        NonBlockingSession session = (NonBlockingSession) sc.getSession2();
         session.releaseConnectionIfSafe(jdbcConnection, LOGGER.isDebugEnabled(), false);
     }
 
-    public static void justReturnValue(ServerConnection sc, String orgin, BackendConnection jdbcConnection) {
+    public static void justReturnValue(ClientConn sc, String orgin, BackendConnection jdbcConnection) {
         justReturnValue(sc, orgin);
-        NonBlockingSession session = sc.getSession2();
+        //TODO 缓存session接口
+        NonBlockingSession session = (NonBlockingSession) sc.getSession2();
         session.releaseConnectionIfSafe(jdbcConnection, LOGGER.isDebugEnabled(), false);
     }
 }

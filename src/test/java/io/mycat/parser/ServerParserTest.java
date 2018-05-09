@@ -26,7 +26,8 @@ package io.mycat.parser;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
+import io.mycat.server.parser.SimpleSqlParser;
 import io.mycat.server.parser.ServerParseSelect;
 import io.mycat.server.parser.ServerParseSet;
 import io.mycat.server.parser.ServerParseShow;
@@ -39,105 +40,105 @@ public class ServerParserTest {
 
     @Test
     public void testIsBegin() {
-        Assert.assertEquals(ServerParse.BEGIN, ServerParse.parse("begin"));
-        Assert.assertEquals(ServerParse.BEGIN, ServerParse.parse("BEGIN"));
-        Assert.assertEquals(ServerParse.BEGIN, ServerParse.parse("BegIn"));
+        Assert.assertEquals(SQLHandler.Type.BEGIN, SimpleSqlParser.parse("begin"));
+        Assert.assertEquals(SQLHandler.Type.BEGIN, SimpleSqlParser.parse("BEGIN"));
+        Assert.assertEquals(SQLHandler.Type.BEGIN, SimpleSqlParser.parse("BegIn"));
     }
 
     @Test
     public void testIsCommit() {
-        Assert.assertEquals(ServerParse.COMMIT, ServerParse.parse("commit"));
-        Assert.assertEquals(ServerParse.COMMIT, ServerParse.parse("COMMIT"));
-        Assert.assertEquals(ServerParse.COMMIT, ServerParse.parse("cOmmiT "));
+        Assert.assertEquals(SQLHandler.Type.COMMIT, SimpleSqlParser.parse("commit"));
+        Assert.assertEquals(SQLHandler.Type.COMMIT, SimpleSqlParser.parse("COMMIT"));
+        Assert.assertEquals(SQLHandler.Type.COMMIT, SimpleSqlParser.parse("cOmmiT "));
     }
     
 
     @Test
     public void testComment() {
-        Assert.assertEquals(ServerParse.MYSQL_CMD_COMMENT, ServerParse.parse("/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */"));
-        Assert.assertEquals(ServerParse.MYSQL_CMD_COMMENT, ServerParse.parse("/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */"));
-        Assert.assertEquals(ServerParse.MYSQL_CMD_COMMENT, ServerParse.parse("/*!40101 SET @saved_cs_client     = @@character_set_client */"));
+        Assert.assertEquals(SQLHandler.Type.MYSQL_CMD_COMMENT, SimpleSqlParser.parse("/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */"));
+        Assert.assertEquals(SQLHandler.Type.MYSQL_CMD_COMMENT, SimpleSqlParser.parse("/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */"));
+        Assert.assertEquals(SQLHandler.Type.MYSQL_CMD_COMMENT, SimpleSqlParser.parse("/*!40101 SET @saved_cs_client     = @@character_set_client */"));
    
-        Assert.assertEquals(ServerParse.MYSQL_COMMENT, ServerParse.parse("/*SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */"));
-        Assert.assertEquals(ServerParse.MYSQL_COMMENT, ServerParse.parse("/*SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */"));
-        Assert.assertEquals(ServerParse.MYSQL_COMMENT, ServerParse.parse("/*SET @saved_cs_client     = @@character_set_client */"));
+        Assert.assertEquals(SQLHandler.Type.MYSQL_COMMENT, SimpleSqlParser.parse("/*SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */"));
+        Assert.assertEquals(SQLHandler.Type.MYSQL_COMMENT, SimpleSqlParser.parse("/*SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */"));
+        Assert.assertEquals(SQLHandler.Type.MYSQL_COMMENT, SimpleSqlParser.parse("/*SET @saved_cs_client     = @@character_set_client */"));
     }
 
     @Test
     public void testMycatComment() {
-        Assert.assertEquals(ServerParse.SELECT, 0xff & ServerParse.parse("/*#mycat:schema=DN1*/SELECT ..."));
-        Assert.assertEquals(ServerParse.UPDATE, 0xff & ServerParse.parse("/*#mycat: schema = DN1 */ UPDATE ..."));
-        Assert.assertEquals(ServerParse.DELETE, 0xff & ServerParse.parse("/*#mycat: sql = SELECT id FROM user */ DELETE ..."));
+        Assert.assertEquals(SQLHandler.Type.SELECT, 0xff & SimpleSqlParser.parse("/*#mycat:schema=DN1*/SELECT ..."));
+        Assert.assertEquals(SQLHandler.Type.UPDATE, 0xff & SimpleSqlParser.parse("/*#mycat: schema = DN1 */ UPDATE ..."));
+        Assert.assertEquals(SQLHandler.Type.DELETE, 0xff & SimpleSqlParser.parse("/*#mycat: sql = SELECT id FROM user */ DELETE ..."));
     }
 
     @Test
     public void testOldMycatComment() {
-        Assert.assertEquals(ServerParse.SELECT, 0xff & ServerParse.parse("/*!mycat:schema=DN1*/SELECT ..."));
-        Assert.assertEquals(ServerParse.UPDATE, 0xff & ServerParse.parse("/*!mycat: schema = DN1 */ UPDATE ..."));
-        Assert.assertEquals(ServerParse.DELETE, 0xff & ServerParse.parse("/*!mycat: sql = SELECT id FROM user */ DELETE ..."));
+        Assert.assertEquals(SQLHandler.Type.SELECT, 0xff & SimpleSqlParser.parse("/*!mycat:schema=DN1*/SELECT ..."));
+        Assert.assertEquals(SQLHandler.Type.UPDATE, 0xff & SimpleSqlParser.parse("/*!mycat: schema = DN1 */ UPDATE ..."));
+        Assert.assertEquals(SQLHandler.Type.DELETE, 0xff & SimpleSqlParser.parse("/*!mycat: sql = SELECT id FROM user */ DELETE ..."));
     }
 
     @Test
     public void testIsDelete() {
-        Assert.assertEquals(ServerParse.DELETE, ServerParse.parse("delete ..."));
-        Assert.assertEquals(ServerParse.DELETE, ServerParse.parse("DELETE ..."));
-        Assert.assertEquals(ServerParse.DELETE, ServerParse.parse("DeletE ..."));
+        Assert.assertEquals(SQLHandler.Type.DELETE, SimpleSqlParser.parse("delete ..."));
+        Assert.assertEquals(SQLHandler.Type.DELETE, SimpleSqlParser.parse("DELETE ..."));
+        Assert.assertEquals(SQLHandler.Type.DELETE, SimpleSqlParser.parse("DeletE ..."));
     }
 
     @Test
     public void testIsInsert() {
-        Assert.assertEquals(ServerParse.INSERT, ServerParse.parse("insert ..."));
-        Assert.assertEquals(ServerParse.INSERT, ServerParse.parse("INSERT ..."));
-        Assert.assertEquals(ServerParse.INSERT, ServerParse.parse("InserT ..."));
+        Assert.assertEquals(SQLHandler.Type.INSERT, SimpleSqlParser.parse("insert ..."));
+        Assert.assertEquals(SQLHandler.Type.INSERT, SimpleSqlParser.parse("INSERT ..."));
+        Assert.assertEquals(SQLHandler.Type.INSERT, SimpleSqlParser.parse("InserT ..."));
     }
 
     @Test
     public void testIsReplace() {
-        Assert.assertEquals(ServerParse.REPLACE, ServerParse.parse("replace ..."));
-        Assert.assertEquals(ServerParse.REPLACE, ServerParse.parse("REPLACE ..."));
-        Assert.assertEquals(ServerParse.REPLACE, ServerParse.parse("rEPLACe ..."));
+        Assert.assertEquals(SQLHandler.Type.REPLACE, SimpleSqlParser.parse("replace ..."));
+        Assert.assertEquals(SQLHandler.Type.REPLACE, SimpleSqlParser.parse("REPLACE ..."));
+        Assert.assertEquals(SQLHandler.Type.REPLACE, SimpleSqlParser.parse("rEPLACe ..."));
     }
 
     @Test
     public void testIsRollback() {
-        Assert.assertEquals(ServerParse.ROLLBACK, ServerParse.parse("rollback"));
-        Assert.assertEquals(ServerParse.ROLLBACK, ServerParse.parse("ROLLBACK"));
-        Assert.assertEquals(ServerParse.ROLLBACK, ServerParse.parse("rolLBACK "));
+        Assert.assertEquals(SQLHandler.Type.ROLLBACK, SimpleSqlParser.parse("rollback"));
+        Assert.assertEquals(SQLHandler.Type.ROLLBACK, SimpleSqlParser.parse("ROLLBACK"));
+        Assert.assertEquals(SQLHandler.Type.ROLLBACK, SimpleSqlParser.parse("rolLBACK "));
     }
 
     @Test
     public void testIsSelect() {
-        Assert.assertEquals(ServerParse.SELECT, 0xff & ServerParse.parse("select ..."));
-        Assert.assertEquals(ServerParse.SELECT, 0xff & ServerParse.parse("SELECT ..."));
-        Assert.assertEquals(ServerParse.SELECT, 0xff & ServerParse.parse("sELECt ..."));
+        Assert.assertEquals(SQLHandler.Type.SELECT, 0xff & SimpleSqlParser.parse("select ..."));
+        Assert.assertEquals(SQLHandler.Type.SELECT, 0xff & SimpleSqlParser.parse("SELECT ..."));
+        Assert.assertEquals(SQLHandler.Type.SELECT, 0xff & SimpleSqlParser.parse("sELECt ..."));
     }
 
     @Test
     public void testIsSet() {
-        Assert.assertEquals(ServerParse.SET, 0xff & ServerParse.parse("set ..."));
-        Assert.assertEquals(ServerParse.SET, 0xff & ServerParse.parse("SET ..."));
-        Assert.assertEquals(ServerParse.SET, 0xff & ServerParse.parse("sEt ..."));
+        Assert.assertEquals(SQLHandler.Type.SET, 0xff & SimpleSqlParser.parse("set ..."));
+        Assert.assertEquals(SQLHandler.Type.SET, 0xff & SimpleSqlParser.parse("SET ..."));
+        Assert.assertEquals(SQLHandler.Type.SET, 0xff & SimpleSqlParser.parse("sEt ..."));
     }
 
     @Test
     public void testIsShow() {
-        Assert.assertEquals(ServerParse.SHOW, 0xff & ServerParse.parse("show ..."));
-        Assert.assertEquals(ServerParse.SHOW, 0xff & ServerParse.parse("SHOW ..."));
-        Assert.assertEquals(ServerParse.SHOW, 0xff & ServerParse.parse("sHOw ..."));
+        Assert.assertEquals(SQLHandler.Type.SHOW, 0xff & SimpleSqlParser.parse("show ..."));
+        Assert.assertEquals(SQLHandler.Type.SHOW, 0xff & SimpleSqlParser.parse("SHOW ..."));
+        Assert.assertEquals(SQLHandler.Type.SHOW, 0xff & SimpleSqlParser.parse("sHOw ..."));
     }
 
     @Test
     public void testIsStart() {
-        Assert.assertEquals(ServerParse.START, 0xff & ServerParse.parse("start ..."));
-        Assert.assertEquals(ServerParse.START, 0xff & ServerParse.parse("START ..."));
-        Assert.assertEquals(ServerParse.START, 0xff & ServerParse.parse("stART ..."));
+        Assert.assertEquals(SQLHandler.Type.START, 0xff & SimpleSqlParser.parse("start ..."));
+        Assert.assertEquals(SQLHandler.Type.START, 0xff & SimpleSqlParser.parse("START ..."));
+        Assert.assertEquals(SQLHandler.Type.START, 0xff & SimpleSqlParser.parse("stART ..."));
     }
 
     @Test
     public void testIsUpdate() {
-        Assert.assertEquals(ServerParse.UPDATE, ServerParse.parse("update ..."));
-        Assert.assertEquals(ServerParse.UPDATE, ServerParse.parse("UPDATE ..."));
-        Assert.assertEquals(ServerParse.UPDATE, ServerParse.parse("UPDate ..."));
+        Assert.assertEquals(SQLHandler.Type.UPDATE, SimpleSqlParser.parse("update ..."));
+        Assert.assertEquals(SQLHandler.Type.UPDATE, SimpleSqlParser.parse("UPDATE ..."));
+        Assert.assertEquals(SQLHandler.Type.UPDATE, SimpleSqlParser.parse("UPDate ..."));
     }
 
     @Test
@@ -227,30 +228,30 @@ public class ServerParserTest {
 
     @Test
     public void testIsKill() {
-        Assert.assertEquals(ServerParse.KILL, 0xff & ServerParse.parse(" kill  ..."));
-        Assert.assertEquals(ServerParse.KILL, 0xff & ServerParse.parse("kill 111111 ..."));
-        Assert.assertEquals(ServerParse.KILL, 0xff & ServerParse.parse("KILL  1335505632"));
+        Assert.assertEquals(SQLHandler.Type.KILL, 0xff & SimpleSqlParser.parse(" kill  ..."));
+        Assert.assertEquals(SQLHandler.Type.KILL, 0xff & SimpleSqlParser.parse("kill 111111 ..."));
+        Assert.assertEquals(SQLHandler.Type.KILL, 0xff & SimpleSqlParser.parse("KILL  1335505632"));
     }
 
     @Test
     public void testIsKillQuery() {
-        Assert.assertEquals(ServerParse.KILL_QUERY, 0xff & ServerParse.parse(" kill query ..."));
-        Assert.assertEquals(ServerParse.KILL_QUERY, 0xff & ServerParse.parse("kill   query 111111 ..."));
-        Assert.assertEquals(ServerParse.KILL_QUERY, 0xff & ServerParse.parse("KILL QUERY 1335505632"));
+        Assert.assertEquals(SQLHandler.Type.KILL_QUERY, 0xff & SimpleSqlParser.parse(" kill query ..."));
+        Assert.assertEquals(SQLHandler.Type.KILL_QUERY, 0xff & SimpleSqlParser.parse("kill   query 111111 ..."));
+        Assert.assertEquals(SQLHandler.Type.KILL_QUERY, 0xff & SimpleSqlParser.parse("KILL QUERY 1335505632"));
     }
 
     @Test
     public void testIsSavepoint() {
-        Assert.assertEquals(ServerParse.SAVEPOINT, ServerParse.parse(" savepoint  ..."));
-        Assert.assertEquals(ServerParse.SAVEPOINT, ServerParse.parse("SAVEPOINT "));
-        Assert.assertEquals(ServerParse.SAVEPOINT, ServerParse.parse(" SAVEpoint   a"));
+        Assert.assertEquals(SQLHandler.Type.SAVEPOINT, SimpleSqlParser.parse(" savepoint  ..."));
+        Assert.assertEquals(SQLHandler.Type.SAVEPOINT, SimpleSqlParser.parse("SAVEPOINT "));
+        Assert.assertEquals(SQLHandler.Type.SAVEPOINT, SimpleSqlParser.parse(" SAVEpoint   a"));
     }
 
     @Test
     public void testIsUse() {
-        Assert.assertEquals(ServerParse.USE, 0xff & ServerParse.parse(" use  ..."));
-        Assert.assertEquals(ServerParse.USE, 0xff & ServerParse.parse("USE "));
-        Assert.assertEquals(ServerParse.USE, 0xff & ServerParse.parse(" Use   a"));
+        Assert.assertEquals(SQLHandler.Type.USE, 0xff & SimpleSqlParser.parse(" use  ..."));
+        Assert.assertEquals(SQLHandler.Type.USE, 0xff & SimpleSqlParser.parse("USE "));
+        Assert.assertEquals(SQLHandler.Type.USE, 0xff & SimpleSqlParser.parse(" Use   a"));
     }
 
     @Test
@@ -470,15 +471,15 @@ public class ServerParserTest {
     
     @Test
     public void testLockTable() {
-    	Assert.assertEquals(ServerParse.LOCK, ServerParse.parse("lock tables ttt write;"));
-    	Assert.assertEquals(ServerParse.LOCK, ServerParse.parse(" lock tables ttt read;"));
-    	Assert.assertEquals(ServerParse.LOCK, ServerParse.parse("lock tables"));
+    	Assert.assertEquals(SQLHandler.Type.LOCK, SimpleSqlParser.parse("lock tables ttt write;"));
+    	Assert.assertEquals(SQLHandler.Type.LOCK, SimpleSqlParser.parse(" lock tables ttt read;"));
+    	Assert.assertEquals(SQLHandler.Type.LOCK, SimpleSqlParser.parse("lock tables"));
     }
 
     @Test
     public void testUnlockTable() {
-    	Assert.assertEquals(ServerParse.UNLOCK, ServerParse.parse("unlock tables"));
-    	Assert.assertEquals(ServerParse.UNLOCK, ServerParse.parse(" unlock	 tables"));
+    	Assert.assertEquals(SQLHandler.Type.UNLOCK, SimpleSqlParser.parse("unlock tables"));
+    	Assert.assertEquals(SQLHandler.Type.UNLOCK, SimpleSqlParser.parse(" unlock	 tables"));
     }
     
     @Test

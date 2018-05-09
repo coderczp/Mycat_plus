@@ -41,6 +41,7 @@ import io.mycat.manager.response.Offline;
 import io.mycat.manager.response.Online;
 import io.mycat.net.handler.FrontendQueryHandler;
 import io.mycat.net.mysql.OkPacket;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.route.parser.ManagerParse;
 
 /**
@@ -108,7 +109,7 @@ public class ManagerQueryHandler implements FrontendQueryHandler {
                 ShowServerLog.handle(sql, c);
                 break;
             default:
-                c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement");
+                c.writeErrMessage((byte)1,ErrorCode.ER_YES, "Unsupported statement");
         }
     }
 

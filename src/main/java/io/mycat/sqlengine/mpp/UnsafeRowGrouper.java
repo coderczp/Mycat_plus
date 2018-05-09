@@ -23,6 +23,26 @@
  */
 package io.mycat.sqlengine.mpp;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.annotation.Nonnull;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.mycat.MycatServer;
 import io.mycat.memory.MyCatMemory;
 import io.mycat.memory.unsafe.KVIterator;
@@ -33,24 +53,10 @@ import io.mycat.memory.unsafe.row.BufferHolder;
 import io.mycat.memory.unsafe.row.StructType;
 import io.mycat.memory.unsafe.row.UnsafeRow;
 import io.mycat.memory.unsafe.row.UnsafeRowWriter;
-
 import io.mycat.memory.unsafe.utils.BytesTools;
 import io.mycat.memory.unsafe.utils.MycatPropertyConf;
 import io.mycat.memory.unsafe.utils.sort.UnsafeExternalRowSorter;
 import io.mycat.util.ByteUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.nio.charset.StandardCharsets;
-import java.text.NumberFormat;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Created by zagnix on 2016/6/26.

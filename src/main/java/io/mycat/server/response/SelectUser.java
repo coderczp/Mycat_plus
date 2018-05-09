@@ -33,7 +33,7 @@ import io.mycat.net.mysql.ErrorPacket;
 import io.mycat.net.mysql.FieldPacket;
 import io.mycat.net.mysql.ResultSetHeaderPacket;
 import io.mycat.net.mysql.RowDataPacket;
-import io.mycat.server.ServerConnection;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.util.StringUtil;
 
 /**
@@ -55,7 +55,7 @@ public class SelectUser {
         eof.packetId = ++packetId;
     }
 
-    public static void response(ServerConnection c) {
+    public static void response(ClientConn c) {
         if (MycatServer.getInstance().isOnline()) {
             ByteBuffer buffer = c.allocate();
             buffer = header.write(buffer, c,true);
@@ -77,7 +77,7 @@ public class SelectUser {
         }
     }
 
-    private static byte[] getUser(ServerConnection c) {
+    private static byte[] getUser(ClientConn c) {
         StringBuilder sb = new StringBuilder();
         sb.append(c.getUser()).append('@').append(c.getHost());
         return StringUtil.encode(sb.toString(), c.getCharset());

@@ -4,18 +4,23 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
-import java.sql.*;
-import java.util.*;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
-import io.mycat.backend.mysql.PacketUtil;
-import io.mycat.route.Procedure;
-import io.mycat.route.ProcedureParameter;
-import io.mycat.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.mycat.MycatServer;
 import io.mycat.backend.BackendConnection;
+import io.mycat.backend.mysql.PacketUtil;
 import io.mycat.backend.mysql.nio.handler.ConnectionHeartBeatHandler;
 import io.mycat.backend.mysql.nio.handler.ResponseHandler;
 import io.mycat.config.ErrorCode;
@@ -27,9 +32,16 @@ import io.mycat.net.mysql.FieldPacket;
 import io.mycat.net.mysql.OkPacket;
 import io.mycat.net.mysql.ResultSetHeaderPacket;
 import io.mycat.net.mysql.RowDataPacket;
+import io.mycat.net.plus.ClientConn;
+import io.mycat.route.Procedure;
+import io.mycat.route.ProcedureParameter;
 import io.mycat.route.RouteResultsetNode;
-import io.mycat.server.ServerConnection;
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
+import io.mycat.util.MysqlDefs;
+import io.mycat.util.ObjectUtil;
+import io.mycat.util.ResultSetUtil;
+import io.mycat.util.StringUtil;
+import io.mycat.util.TimeUtil;
 
 public class JDBCConnection implements BackendConnection {
     protected static final Logger LOGGER         = LoggerFactory.getLogger(JDBCConnection.class);
@@ -272,7 +284,7 @@ public class JDBCConnection implements BackendConnection {
         }
     }
 
-    private void executeSQL(RouteResultsetNode rrn, ServerConnection sc, boolean autocommit) throws IOException {
+    private void executeSQL(RouteResultsetNode rrn, ClientConn sc, boolean autocommit) throws IOException {
         String orgin = rrn.getStatement();
         // String sql = rrn.getStatement().toLowerCase();
         // LOGGER.info("JDBC SQL:"+orgin+"|"+sc.toString());
@@ -293,8 +305,8 @@ public class JDBCConnection implements BackendConnection {
             if (rrn.isCallStatement() && "oracle".equalsIgnoreCase(getDbType())) {
                 //存储过程暂时只支持oracle
                 ouputCallStatement(rrn, sc, orgin);
-            } else if (sqlType == ServerParse.SELECT || sqlType == ServerParse.SHOW) {
-                if ((sqlType == ServerParse.SHOW) && (!dbType.equals("MYSQL"))) {
+            } else if (sqlType == SQLHandler.Type.SELECT || sqlType == SQLHandler.Type.SHOW) {
+                if ((sqlType == SQLHandler.Type.SHOW) && (!dbType.equals("MYSQL"))) {
                     // showCMD(sc, orgin);
                     //ShowVariables.execute(sc, orgin);
                     ShowVariables.execute(sc, orgin, this);
@@ -346,7 +358,7 @@ public class JDBCConnection implements BackendConnection {
         return fieldPacket;
     }
 
-    private void executeddl(ServerConnection sc, String sql) throws SQLException {
+    private void executeddl(ClientConn sc, String sql) throws SQLException {
         Statement stmt = null;
         try {
             stmt = con.createStatement();
@@ -376,7 +388,7 @@ public class JDBCConnection implements BackendConnection {
         }
     }
 
-    private void ouputCallStatement(RouteResultsetNode rrn, ServerConnection sc, String sql) throws SQLException {
+    private void ouputCallStatement(RouteResultsetNode rrn, ClientConn sc, String sql) throws SQLException {
 
         CallableStatement stmt = null;
         ResultSet rs = null;
@@ -581,7 +593,7 @@ public class JDBCConnection implements BackendConnection {
         }
     }
 
-    private void ouputResultSet(ServerConnection sc, String sql) throws SQLException {
+    private void ouputResultSet(ClientConn sc, String sql) throws SQLException {
         ResultSet rs = null;
         Statement stmt = null;
 
@@ -728,7 +740,7 @@ public class JDBCConnection implements BackendConnection {
     }
 
     @Override
-    public void execute(final RouteResultsetNode node, final ServerConnection source,
+    public void execute(final RouteResultsetNode node, final ClientConn source,
                         final boolean autocommit) throws IOException {
         Runnable runnable = new Runnable() {
             @Override

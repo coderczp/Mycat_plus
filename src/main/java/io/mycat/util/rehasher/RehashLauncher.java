@@ -106,7 +106,7 @@ public class RehashLauncher {
 	    } else if (HashType.MOD.equals(args.getHashType())) {
 	        alg=new PartitionByMod();
             PartitionByMod mod=(PartitionByMod)alg;
-            mod.setCount(rehashHosts.length);
+            mod.setPartitionNum(rehashHosts.length);
             mod.init();
         }
 	}

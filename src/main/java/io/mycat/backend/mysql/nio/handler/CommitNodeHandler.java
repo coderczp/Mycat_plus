@@ -25,16 +25,16 @@ package io.mycat.backend.mysql.nio.handler;
 
 import java.util.List;
 
-import io.mycat.backend.mysql.xa.TxState;
-import io.mycat.config.ErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.mycat.backend.BackendConnection;
 import io.mycat.backend.mysql.nio.MySQLConnection;
+import io.mycat.backend.mysql.xa.TxState;
+import io.mycat.config.ErrorCode;
 import io.mycat.net.mysql.ErrorPacket;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.server.NonBlockingSession;
-import io.mycat.server.ServerConnection;
 
 /**
  * @author mycat
@@ -51,7 +51,7 @@ public class CommitNodeHandler implements ResponseHandler {
         conn.setResponseHandler(CommitNodeHandler.this);
         boolean isClosed = conn.isClosedOrQuit();
         if (isClosed) {
-            session.getSource().writeErrMessage(ErrorCode.ER_UNKNOWN_ERROR,
+            session.getSource().writeErrMessage((byte)1,ErrorCode.ER_UNKNOWN_ERROR,
                 "receive commit,but find backend con is closed or quit");
             LOGGER.error(conn + "receive commit,but fond backend con is closed or quit");
         }
@@ -108,7 +108,7 @@ public class CommitNodeHandler implements ResponseHandler {
             session.getSource().setAutocommit(true);
         }
         session.clearResources(false);
-        ServerConnection source = session.getSource();
+        ClientConn source = session.getSource();
         source.write(ok);
     }
 

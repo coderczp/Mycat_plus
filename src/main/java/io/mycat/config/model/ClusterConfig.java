@@ -26,6 +26,7 @@ package io.mycat.config.model;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -44,12 +45,29 @@ import io.mycat.util.SplitUtil;
  * @author mycat
  */
 public class ClusterConfig {
+
+    /**当前节点,集群模式下做区分*/
+    private MycatNodeConfig                    currentNode;
+
     private final Map<String, MycatNodeConfig> nodes;
-    private final Map<String, List<String>> groups;
+    private final Map<String, List<String>>    groups;
 
     public ClusterConfig(Element root, int port) {
         nodes = Collections.unmodifiableMap(loadNode(root, port));
         groups = Collections.unmodifiableMap(loadGroup(root, nodes));
+    }
+
+    public ClusterConfig() {
+        nodes = new HashMap<>();
+        groups = new HashMap<>();
+    }
+
+    public MycatNodeConfig getCurrentNode() {
+        return currentNode;
+    }
+
+    public void setCurrentNode(MycatNodeConfig currentNode) {
+        this.currentNode = currentNode;
     }
 
     public Map<String, MycatNodeConfig> getNodes() {
@@ -91,7 +109,12 @@ public class ClusterConfig {
                     throw new ConfigException("weight should be > 0 in host:" + host + " weight:" + weight);
                 }
 
-                MycatNodeConfig conf = new MycatNodeConfig(name, host, port, weight);
+                MycatNodeConfig conf = new MycatNodeConfig();
+                conf.setStartTime(new Date());
+                conf.setWeight(weight);
+                conf.setName(name);
+                conf.setHost(host);
+                conf.setPort(port);
                 nodes.put(name, conf);
                 hostSet.add(host);
             }

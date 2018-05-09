@@ -23,22 +23,52 @@
  */
 package io.mycat.config.model;
 
+import java.util.Date;
+
 /**
- * @author mycat
+ * 集群上的节点信息描述,可以用来做雪花算法等
  * @author mycat
  */
 public final class MycatNodeConfig {
 
     private String name;
     private String host;
-    private int port;
-    private int weight;
 
-    public MycatNodeConfig(String name, String host, int port, int weight) {
-        this.name = name;
-        this.host = host;
-        this.port = port;
-        this.weight = weight;
+    private int    id;
+    private int    port;
+    private int    weight;
+
+    /**所在区域(数据中心)ID*/
+    private int    region;
+    
+    /**web服务端口,用于集群见同步配置*/
+    private int    webPort;
+
+    /**启动时间*/
+    private Date   startTime;
+
+    public int getWebPort() {
+        return webPort;
+    }
+
+    public void setWebPort(int webPort) {
+        this.webPort = webPort;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public Date getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Date startTime) {
+        this.startTime = startTime;
     }
 
     public String getName() {
@@ -73,10 +103,18 @@ public final class MycatNodeConfig {
         this.weight = weight;
     }
 
+    public int getRegion() {
+        return region;
+    }
+
+    public void setRegion(int region) {
+        this.region = region;
+    }
+
     @Override
     public String toString() {
-        return new StringBuilder().append("[name=").append(name).append(",host=").append(host).append(",port=")
-                .append(port).append(",weight=").append(weight).append(']').toString();
+        return "MycatNodeConfig [name=" + name + ", host=" + host + ", id=" + id + ", port=" + port + ", weight="
+               + weight + ", region=" + region + ", startTime=" + startTime + "]";
     }
 
 }

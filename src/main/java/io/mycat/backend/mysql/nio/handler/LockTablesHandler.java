@@ -38,7 +38,7 @@ public class LockTablesHandler extends MultiNodeHandler {
 	
 	public void execute() throws Exception {
 		super.reset(this.rrs.getNodes().length);
-		MycatConfig conf = MycatServer.getInstance().getConfig();
+		MycatConfig conf =session.getCurrentConfig();
 		for (final RouteResultsetNode node : rrs.getNodes()) {
 			BackendConnection conn = session.getTarget(node);
 			if (session.tryExistsCon(conn, node)) {

@@ -25,6 +25,8 @@ package io.mycat.net.handler;
 
 import java.util.Set;
 
+import io.mycat.server.Session;
+
 /**
  * 权限提供者
  * 
@@ -89,6 +91,6 @@ public interface FrontendPrivileges {
      * 检查 SQL 语句的 DML 权限
      * @return
      */
-    boolean checkDmlPrivilege(String user, String schema, String sql);   
+    boolean checkDmlPrivilege(String user, String schema, Session session);   
 
 }

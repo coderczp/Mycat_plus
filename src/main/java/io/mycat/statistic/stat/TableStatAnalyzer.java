@@ -1,12 +1,16 @@
 package io.mycat.statistic.stat;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.slf4j.Logger; import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.statement.SQLDeleteStatement;
@@ -21,7 +25,7 @@ import com.alibaba.druid.sql.parser.SQLStatementParser;
 import com.alibaba.druid.sql.visitor.SQLASTVisitorAdapter;
 import com.alibaba.druid.util.JdbcConstants;
 
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
 import io.mycat.util.StringUtil;
 
 /**
@@ -54,11 +58,11 @@ public class TableStatAnalyzer implements QueryResultListener {
 		int sqlType = queryResult.getSqlType();
 		String sql = queryResult.getSql();
 		switch(sqlType) {
-    	case ServerParse.SELECT:		
-    	case ServerParse.UPDATE:			
-    	case ServerParse.INSERT:		
-    	case ServerParse.DELETE:
-    	case ServerParse.REPLACE:  
+    	case SQLHandler.Type.SELECT:		
+    	case SQLHandler.Type.UPDATE:			
+    	case SQLHandler.Type.INSERT:		
+    	case SQLHandler.Type.DELETE:
+    	case SQLHandler.Type.REPLACE:  
     		
     		//关联表提取
     		String masterTable = null;

@@ -28,7 +28,7 @@ import java.nio.ByteBuffer;
 import io.mycat.MycatServer;
 import io.mycat.backend.mysql.BufferUtil;
 import io.mycat.backend.mysql.MySQLMessage;
-import io.mycat.net.FrontendConnection;
+import io.mycat.net.plus.ClientConn;
 
 /**
  * From server to client in response to command, if no error and no result set.
@@ -88,7 +88,7 @@ public class OkPacket extends MySQLPacket {
 		}
 	}
 
-	public byte[] writeToBytes(FrontendConnection c) {
+	public byte[] writeToBytes(ClientConn c) {
 		ByteBuffer buffer = c.allocate();
 		this.write(buffer, c);
 		buffer.flip();
@@ -98,7 +98,7 @@ public class OkPacket extends MySQLPacket {
 		return data;
 	}
 
-	private ByteBuffer write(ByteBuffer buffer, FrontendConnection c) {
+	private ByteBuffer write(ByteBuffer buffer, ClientConn c) {
 
 		int size = calcPacketSize();
 		buffer = c.checkWriteBuffer(buffer, c.getPacketHeaderSize() + size,
@@ -118,7 +118,7 @@ public class OkPacket extends MySQLPacket {
 
 	}
 
-	public void write(FrontendConnection c) {
+	public void write(ClientConn  c) {
 		ByteBuffer buffer = write(c.allocate(), c);
 		c.write(buffer);
 	}

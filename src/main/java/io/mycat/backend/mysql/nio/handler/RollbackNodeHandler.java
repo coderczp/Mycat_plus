@@ -71,7 +71,7 @@ public class RollbackNodeHandler extends MultiNodeHandler {
 				boolean isClosed=conn.isClosedOrQuit();
 				    if(isClosed)
 					{
-						session.getSource().writeErrMessage(ErrorCode.ER_UNKNOWN_ERROR,
+						session.getSource().writeErrMessage((byte)1,ErrorCode.ER_UNKNOWN_ERROR,
 								"receive rollback,but find backend con is closed or quit");
 						LOGGER.error( conn+"receive rollback,but fond backend con is closed or quit");
 					}

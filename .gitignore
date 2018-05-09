@@ -114,3 +114,6 @@ hs_err_pid*
 /leveldb/
 /h2/
 /datanode/
+/tmlogs/
+/lib/
+/pref.txt

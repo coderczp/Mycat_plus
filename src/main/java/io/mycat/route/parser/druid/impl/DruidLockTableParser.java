@@ -13,7 +13,7 @@ import io.mycat.route.RouteResultset;
 import io.mycat.route.RouteResultsetNode;
 import io.mycat.route.parser.druid.DruidParser;
 import io.mycat.route.parser.druid.MycatSchemaStatVisitor;
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
 import io.mycat.util.SplitUtil;
 
 /**
@@ -41,7 +41,7 @@ public class DruidLockTableParser extends DefaultDruidParser implements DruidPar
 		List<String> dataNodes = tableConfig.getDataNodes();
 		RouteResultsetNode[] nodes = new RouteResultsetNode[dataNodes.size()];
 		for (int i = 0; i < dataNodes.size(); i ++) {
-			nodes[i] = new RouteResultsetNode(dataNodes.get(i), ServerParse.LOCK, stmt.toString());
+			nodes[i] = new RouteResultsetNode(dataNodes.get(i), SQLHandler.Type.LOCK, stmt.toString());
 		}
 		rrs.setNodes(nodes);
 		rrs.setFinishedRoute(true);

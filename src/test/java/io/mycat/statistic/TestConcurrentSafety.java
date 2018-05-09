@@ -1,6 +1,6 @@
 package io.mycat.statistic;
 
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
 import io.mycat.statistic.stat.*;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -78,9 +78,9 @@ public class TestConcurrentSafety {
     public void testQueryConditionAnalyzer() throws InterruptedException {
 
 
-        final QueryResult qr = new QueryResult("zhuam", ServerParse.SELECT, sql, 0, 0, 0, 0, 0,0);
-        final QueryResult qr2 = new QueryResult("zhuam", ServerParse.SELECT, sql2, 0, 0, 0, 0, 0,0);
-        final QueryResult qr3 = new QueryResult("zhuam", ServerParse.SELECT, sql3, 0, 0, 0, 0, 0,0);
+        final QueryResult qr = new QueryResult("zhuam", SQLHandler.Type.SELECT, sql, 0, 0, 0, 0, 0,0);
+        final QueryResult qr2 = new QueryResult("zhuam", SQLHandler.Type.SELECT, sql2, 0, 0, 0, 0, 0,0);
+        final QueryResult qr3 = new QueryResult("zhuam", SQLHandler.Type.SELECT, sql3, 0, 0, 0, 0, 0,0);
 
         final QueryConditionAnalyzer analyzer = QueryConditionAnalyzer.getInstance();
         analyzer.setCf("dynamic&fnum");

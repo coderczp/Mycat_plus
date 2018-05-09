@@ -8,37 +8,57 @@
   http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd 
   http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
   http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd">
+
 	<mvc:annotation-driven />
 
-	<context:component-scan base-package="io.mycat.web"></context:component-scan>
+	<context:component-scan base-package="io.mycat.web" />
+
+	<context:property-placeholder ignore-unresolvable="false"
+		location="classpath*:spring/config/${spring.profiles.active}.properties" />
 
 	<mvc:resources mapping="res/**" location="res/" />
+
 	<mvc:annotation-driven>
 		<mvc:message-converters>
 			<bean class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter" />
 		</mvc:message-converters>
 	</mvc:annotation-driven>
 
+	<mvc:interceptors>
+		<bean class="io.mycat.web.common.CommonIntercepter" />
+	</mvc:interceptors>
+
 	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
 		<property name="prefix" value="" />
 		<property name="suffix" value="" />
 	</bean>
 
+	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<property name="basename" value="classpath:spring/i18n/messages" />
+		<property name="useCodeAsDefaultMessage" value="true" />
+	</bean>
+
+
 	<bean name="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
-		<property name="driverClassName" value="org.h2.Driver" />
-		<property name="url" value="jdbc:h2:file:./h2/proxy_info;AUTO_SERVER=TRUE" />
+		<property name="driverClassName" value="${jdbc.driver}" />
+		<property name="password" value="${jdbc.user}" />
+		<property name="username" value="${jdbc.pwd}" />
+		<property name="url" value="${jdbc.url}" />
 	</bean>
 
 	<jdbc:initialize-database data-source="dataSource" ignore-failures="ALL">
-		<jdbc:script location="classpath:spring/proxy_info.sql" />
+		<jdbc:script location="classpath:spring/proxy_schema.sql" />
 	</jdbc:initialize-database>
 
-	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+	<!-- need wait jdbc:initialize-database executed -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean" depends-on="org.springframework.jdbc.datasource.init.DataSourceInitializer#0">
 		<property name="dataSource" ref="dataSource" />
+		 <property name="mapperLocations" value="classpath:spring/mybaits/**/*.xml" />
 	</bean>
 
 	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
 		<property name="basePackage" value="io.mycat.web.dao" />
 		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
 	</bean>
+
 </beans>

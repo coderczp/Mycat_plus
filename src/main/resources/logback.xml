@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--debug="true" : 打印logback内部状态（默认当logback运行出错时才会打印内部状态 ），配置该属性后打印条件如下（同时满足）： 1、找到配置文件 2、配置文件是一个格式正确的xml文件 也可编程实现打印内部状态，例如： 
+	LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory(); StatusPrinter.print(lc); -->
+<!-- scan="true" ： 自动扫描该配置文件，若有修改则重新加载该配置文件 -->
+<!-- scanPeriod="30 seconds" : 配置自动扫面时间间隔（单位可以是：milliseconds, seconds, minutes or hours，默认为：milliseconds）， 默认为1分钟，scan="true"时该配置才会生效 -->
+<configuration debug="true" scan="false" scanPeriod="30 seconds" packagingData="true">
+
+	<!-- 设置 logger context 名称,一旦设置不可改变，默认为default -->
+	<contextName>mycat</contextName>
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>logs/mycat.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<fileNamePattern>logs/${date:yyyy-MM}/mycat-%d{MM-dd}-%i.log.gz</fileNamePattern>
+			<minIndex>1</minIndex>
+			<maxIndex>1000</maxIndex>
+		</rollingPolicy>
+
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<maxFileSize>250MB</maxFileSize>
+		</triggeringPolicy>
+
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<root level="info">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE" />
+	</root>
+	
+</configuration>

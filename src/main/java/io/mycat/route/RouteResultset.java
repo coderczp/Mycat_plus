@@ -25,8 +25,6 @@ package io.mycat.route;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
 
-import io.mycat.MycatServer;
-import io.mycat.config.MycatConfig;
 import io.mycat.config.model.SchemaConfig;
 import io.mycat.route.parser.util.PageSQLUtil;
 import io.mycat.sqlengine.mpp.HavingCols;
@@ -39,6 +37,7 @@ import java.util.*;
  * @author mycat
  */
 public final class RouteResultset implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String statement; // 原始语句
     private final int sqlType;
     private RouteResultsetNode[] nodes; // 路由结果节点

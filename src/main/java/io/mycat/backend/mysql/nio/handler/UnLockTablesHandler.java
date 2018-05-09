@@ -11,7 +11,7 @@ import io.mycat.backend.BackendConnection;
 import io.mycat.net.mysql.OkPacket;
 import io.mycat.route.RouteResultsetNode;
 import io.mycat.server.NonBlockingSession;
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
 
 /**
  * unlock tables 语句处理器
@@ -48,7 +48,7 @@ public class UnLockTablesHandler extends MultiNodeHandler implements ResponseHan
 			return;
 		}
 		for (RouteResultsetNode dataNode : dnSet) {
-			RouteResultsetNode node = new RouteResultsetNode(dataNode.getName(), ServerParse.UNLOCK, srcStatement);
+			RouteResultsetNode node = new RouteResultsetNode(dataNode.getName(), SQLHandler.Type.UNLOCK, srcStatement);
 			BackendConnection conn = lockedConns.get(dataNode);
 			if (clearIfSessionClosed(session)) {
 				return;

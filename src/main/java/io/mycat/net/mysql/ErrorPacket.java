@@ -23,12 +23,11 @@
  */
 package io.mycat.net.mysql;
 
-import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 
 import io.mycat.backend.mysql.BufferUtil;
 import io.mycat.backend.mysql.MySQLMessage;
-import io.mycat.net.FrontendConnection;
+import io.mycat.net.plus.ClientConn;
 
 /**
  * From server to client in response to command, if error.
@@ -84,7 +83,7 @@ public class ErrorPacket extends MySQLPacket {
 		message = mm.readBytes();
 	}
 
-	public byte[] writeToBytes(FrontendConnection c) {
+	public byte[] writeToBytes(ClientConn c) {
 		ByteBuffer buffer = c.allocate();
 		buffer = write(buffer, c, false);
 		buffer.flip();
@@ -112,7 +111,7 @@ public class ErrorPacket extends MySQLPacket {
 		return data;
 	}
 	@Override
-	public ByteBuffer write(ByteBuffer buffer, FrontendConnection c,
+	public ByteBuffer write(ByteBuffer buffer, ClientConn c,
 			boolean writeSocketIfFull) {
 		int size = calcPacketSize();
 		buffer = c.checkWriteBuffer(buffer, c.getPacketHeaderSize() + size,
@@ -131,7 +130,7 @@ public class ErrorPacket extends MySQLPacket {
 
 
 
-	public void write(FrontendConnection c) {
+	public void write(ClientConn c) {
 		ByteBuffer buffer = c.allocate();
 		buffer = this.write(buffer, c, true);
 		c.write(buffer);

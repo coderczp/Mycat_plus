@@ -37,6 +37,7 @@ import io.mycat.manager.response.ShowDatabase;
 import io.mycat.manager.response.ShowDatasourceCluster;
 import io.mycat.manager.response.ShowDatasourceSyn;
 import io.mycat.manager.response.ShowDatasourceSynDetail;
+import io.mycat.manager.response.ShowDirectMemory;
 import io.mycat.manager.response.ShowHeartbeat;
 import io.mycat.manager.response.ShowHeartbeatDetail;
 import io.mycat.manager.response.ShowHelp;
@@ -62,10 +63,10 @@ import io.mycat.manager.response.ShowTime;
 import io.mycat.manager.response.ShowVariables;
 import io.mycat.manager.response.ShowVersion;
 import io.mycat.manager.response.ShowWhiteHost;
-import io.mycat.manager.response.ShowDirectMemory;
 import io.mycat.route.parser.ManagerParseShow;
 import io.mycat.route.parser.util.ParseUtil;
-import io.mycat.server.handler.ShowCache;
+import io.mycat.server.handler.plus.SQLHandler;
+import io.mycat.server.handler.plus.SQLHandlerManager;
 import io.mycat.util.StringUtil;
 
 /**
@@ -110,7 +111,7 @@ public final class ShowHandler {
 		case ManagerParseShow.DATANODE_WHERE: {
 			String name = stmt.substring(rs >>> 8).trim();
 			if (StringUtil.isEmpty(name)) {
-				c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement");
+				c.writeErrMessage((byte)1,ErrorCode.ER_YES, "Unsupported statement");
 			} else {
 				ShowDataNode.execute(c, name);
 			}
@@ -122,7 +123,7 @@ public final class ShowHandler {
 		case ManagerParseShow.DATASOURCE_WHERE: {
 			String name = stmt.substring(rs >>> 8).trim();
 			if (StringUtil.isEmpty(name)) {
-				c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement");
+				c.writeErrMessage((byte)1,ErrorCode.ER_YES, "Unsupported statement");
 			} else {
 				ShowDataSource.execute(c, name);
 			}
@@ -191,19 +192,19 @@ public final class ShowHandler {
 		case ManagerParseShow.SLOW_DATANODE: {
 			String name = stmt.substring(rs >>> 8).trim();
 			if (StringUtil.isEmpty(name)) {
-				c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement");
+				c.writeErrMessage((byte)1,ErrorCode.ER_YES, "Unsupported statement");
 			} else {
 				// ShowSlow.dataNode(c, name);
-				c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement");
+				c.writeErrMessage((byte)1,ErrorCode.ER_YES, "Unsupported statement");
 			}
 			break;
 		}
 		case ManagerParseShow.SLOW_SCHEMA: {
 			String name = stmt.substring(rs >>> 8).trim();
 			if (StringUtil.isEmpty(name)) {
-				c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement");
+				c.writeErrMessage((byte)1,ErrorCode.ER_YES, "Unsupported statement");
 			} else {
-				c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement");
+				c.writeErrMessage((byte)1,ErrorCode.ER_YES, "Unsupported statement");
 				// ShowSlow.schema(c, name);
 			}
 			break;
@@ -212,7 +213,7 @@ public final class ShowHandler {
 			ShowThreadPool.execute(c);
 			break;
 		case ManagerParseShow.CACHE:
-			ShowCache.execute(c);
+			SQLHandlerManager.get(SQLHandler.Type.CACHE).handle(stmt, c);
 			break;
 		case ManagerParseShow.SESSION:
 			ShowSession.execute(c);
@@ -248,7 +249,7 @@ public final class ShowHandler {
 			ShowDirectMemory.execute(c,1);
 			break;
 		default:
-			c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement");
+			c.writeErrMessage((byte)1,ErrorCode.ER_YES, "Unsupported statement");
 		}
 	}
 }

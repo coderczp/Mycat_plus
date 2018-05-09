@@ -41,9 +41,9 @@ import io.mycat.backend.mysql.BufferUtil;
 import io.mycat.backend.mysql.nio.handler.MultiNodeQueryHandler;
 import io.mycat.net.mysql.EOFPacket;
 import io.mycat.net.mysql.RowDataPacket;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.route.RouteResultset;
 import io.mycat.route.RouteResultsetNode;
-import io.mycat.server.ServerConnection;
 import io.mycat.sqlengine.mpp.page.RowDataSorter;
 import io.mycat.util.StringUtil;
 
@@ -227,7 +227,7 @@ public class DataMergeService extends AbstractDataNodeMerge {
 					eof.put(eofp.fieldCount);
 					BufferUtil.writeUB2(eof, warningCount);
 					BufferUtil.writeUB2(eof, eofp.status);
-					final ServerConnection source = multiQueryHandler.getSession().getSource();
+					final ClientConn source = multiQueryHandler.getSession().getSource();
 					final byte[] array = eof.array();
 					multiQueryHandler.outputMergeResult(source, array, getResults(array));
 					break;

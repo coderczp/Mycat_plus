@@ -61,7 +61,11 @@ done
 #==============================================================================
 
 #startup Server
+
+USER_JAVA_OP=$@
+
 RUN_CMD="\"$JAVA_HOME/bin/java\""
+RUN_CMD="$RUN_CMD ${USER_JAVA_OP}"
 RUN_CMD="$RUN_CMD -DMYCAT_HOME=\"$MYCAT_HOME\""
 RUN_CMD="$RUN_CMD -classpath \"$MYCAT_CLASSPATH\""
 RUN_CMD="$RUN_CMD $JAVA_OPTS"

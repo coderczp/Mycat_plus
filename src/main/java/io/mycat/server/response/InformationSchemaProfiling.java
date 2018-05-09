@@ -1,13 +1,13 @@
 package io.mycat.server.response;
 
+import java.nio.ByteBuffer;
+
 import io.mycat.backend.mysql.PacketUtil;
 import io.mycat.config.Fields;
 import io.mycat.net.mysql.EOFPacket;
 import io.mycat.net.mysql.FieldPacket;
 import io.mycat.net.mysql.ResultSetHeaderPacket;
-import io.mycat.server.ServerConnection;
-
-import java.nio.ByteBuffer;
+import io.mycat.net.plus.ClientConn;
 
 
 public class InformationSchemaProfiling
@@ -23,7 +23,7 @@ public class InformationSchemaProfiling
 	 * response method.
 	 * @param c
 	 */
-	public static void response(ServerConnection c) {
+	public static void response(ClientConn c) {
 
 
         int i = 0;

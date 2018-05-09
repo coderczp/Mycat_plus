@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="/res/css/bootstrap.min.css" rel="stylesheet">
+<link href="/res/css/bootstrap-modal.min.css" rel="stylesheet">
+<link href="/res/css/jquery-date.css" rel="stylesheet">
+<link href="/res/css/bootstrap-select.min.css" rel="stylesheet">
+<link href="/res/css/jquery.dataTables.min.css" rel="stylesheet">
+
+<script src="/res/js/jquery.min.js"></script>
+<script src="/res/js/bootstrap.min.js"></script>
+<script src="/res/js/jstree.js"></script>
+<script src="/res/js/sharding.js"></script>
+<script src="/res/js/jquery-date.js"></script>
+<script src="/res/js/bootstrap-select.min.js"></script>
+<script src="/res/js/bootstrap-modal.pack.min.js"></script>
+<script src="/res/js/jquery.dataTables.min.js"></script>
+
+<title>Mysql-sharding</title>
+</head>
+<body>
+	<nav class="navbar navbar-inverse" role="navigation" id="dtsNav"></nav>
+	<div class="container">
+		<div class="panel panel-success">
+			<div class="panel-heading">
+				<form class="form-inline" role="form">
+					<div class="form-group">
+						<input id="filter" name="db" class="form-control" />
+					</div>
+					<div class="form-group">
+						<button class="btn btn-primary" id="queryBtn" type="button">Query</button>
+						<button class="btn btn-primary" id="addBtn" type="button">Add</button>
+					</div>
+				</form>
+			</div>
+			<div class="panel-body">
+				<table class="display" id="table"></table>
+			</div>
+
+			<!-- table form -->
+			<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="myModalLabel">创建逻辑表</h5>
+						</div>
+						<div class="modal-body">
+							<form class="form" role="form" id="form">
+								<div class="input-group form-group">
+									<label for="sql">SQL</label>
+									<textarea rows="10" cols="77" id="sql" name="sql"></textarea>
+								</div>
+								<div class="input-group form-group">
+									<span class="input-group-addon">逻辑库名</span> <select id="logicDb" name="logicDb"
+										class="selectpicker form-control">
+									</select> <span class="input-group-addon">分片节点</span> <select id="shardingNodes" name="shardingNodes"
+										class="selectpicker show-menu-arrow form-control" multiple>
+										<option value="all">所有节点</option>
+									</select> <span class="input-group-addon">分片字段</span> <input id="shardingColumn" name="shardingColumn"
+										class="form-control" />
+								</div>
+								<div class="input-group form-group">
+									<span class="input-group-addon">分片函数</span> <select id="shardingRule" name="shardingRule"
+										class="selectpicker show-menu-arrow form-control">
+									</select> <input name="ruleObjJson" id="ruleObjJson" type="hidden" />
+								</div>
+								<div class="input-group form-group">
+									<span class="input-group-addon">表类型</span> <select id="tableType" name="tableType"
+										class="selectpicker show-menu-arrow form-control">
+										<option value="0">分片表(会根据规则路由到指定的分片)</option>
+										<option value="1">全局表(会广播到各个分表,只能是数据非常少的表)</option>
+									</select>
+								</div>
+							</form>
+							<div class="text-right">
+								<hr />
+								<button class="btn" id="updateApp" type="button">提交</button>
+								<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- table form end -->
+
+			<!-- rule object form -->
+			<div class="modal fade" id="ruleModal" tabindex="-1" role="dialog" aria-labelledby="ruleModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="ruleModalLabel">分片算法设置</h5>
+						</div>
+						<div class="modal-body">
+							<form class="form" role="form" id="ruleForm" id="ruleInfo">
+								<div  id="ruleInfo"></div>
+							</form>
+							<div class="text-right">
+								<hr />
+								<button class="btn" id="updateRule" type="button">提交</button>
+								<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- rule object form end -->
+
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+	var table;
+	var cache = {};
+	var dbSer = APIFactory.db;
+	var tblSer = APIFactory.tbl;
+	var funcSer = APIFactory.func;
+	var shardNodeSer = APIFactory.dataNode;
+
+	function edit(json) {
+		if (json) {
+			$("#form").bindData(json);
+		} else {
+			$("#form")[0].reset();
+		}
+		$('#myModal').modal('show');
+	}
+
+	function insertOrUpdate() {
+		var arg = $("#form").serializeObject();
+		if (!arg.sql || !arg.shardingColumn || !arg.shardingNodes) {
+			return alert('SQL或分片字段或分片节点为空');
+		}
+
+		arg.shardingNodes = arg.shardingNodes.toString();
+		tblSer.add(arg, function(res) {
+			$("#form")[0].reset();
+			$('#myModal').modal('hide');
+		});
+	}
+
+	function inputItem(label, id, name, val, readOnly) {
+		var rd = readOnly ? "readonly='readonly'" : "";
+		var html = '<div class="input-group form-group">';
+		html += '<span class="input-group-addon">' + label + '</span>';
+		html += '<input '+rd+' name="'+name+'" id="'+id+'" type="text" value="'+val+'" class="form-control"/>';
+		html += '</div>';
+		console.log(html);
+		return html;
+	}
+
+	function loadRuleInfo() {
+		var ruleName = $('#shardingRule').val();
+		if (!ruleName) {
+			return alert("Select one rule");
+		}
+		var arg = {
+			"name" : ruleName
+		};
+
+		var cb = function(data) {
+			var html = '', head = '';
+			var readOnly = false;
+			for ( var k in data) {
+				var val = data[k];
+				readOnly = (k == 'name' || k == 'class' || k == 'partitionNum');
+				if (readOnly) {
+					head += inputItem(k, k, k, val, true);
+				} else {
+					html += inputItem(k, k, k, val, false);
+				}
+			}
+			head += html;
+			$('#ruleInfo').html(head);
+			$('#ruleModal').modal('show');
+		};
+
+		funcSer.get(arg, cb);
+	}
+
+	function setTableRule() {
+		var arg = $("#ruleForm").serializeObject();
+		$('#ruleObjJson').val(JSON.toStr(arg));
+		$('#ruleModal').modal('hide');
+		console.log(arg);
+	}
+
+	function _do(type,id){
+		var data = cache[id];
+		 if(type==1){
+		    tblSer.del(data.id,"操作只会删除逻辑表,是否继续?",function(info){
+		    	query();
+			});
+		 }else{
+			 edit(data);
+		 }
+	}
+	
+	function query(){
+		tblSer.list({
+			"db":$('#filter').val(),
+		},function(data){
+			if(!table){
+				initTable(data);
+			}else{
+				table.clear().rows.add(data).draw(false);
+			}
+		});
+	}
+	
+	function initTable(data){
+		table = $('#table').DataTable({
+				data : data,
+				filter : true,
+				paging : true,
+				language: {
+					"search":"搜索",
+	                "lengthMenu": "_MENU_ 条记录每页",  
+	                "zeroRecords": "没有找到记录",  
+	                "info": "第 _PAGE_ 页 ( 总共 _PAGES_ 页 )",  
+	                "infoFiltered": "(从 _MAX_ 条记录过滤)",  
+	                "infoEmpty": "无记录",  
+	                "paginate": {  
+	                    "previous": "上一页",  
+	                    "next": "下一页"  
+	                }  
+	            }, 
+				columns : [
+					{ "data": "id","title":"ID" },
+				    { "data": "name","title":"名称" },
+				    { "data": "logicDb","title":"库名"},
+				    { "data": "tableType","title":"类型",
+				       "render": function ( data, type, row ) {
+	                        return data==1?'全局表':'分片表';
+	                    }
+	                },
+				    { "data": "shardingRule","title":"分片规则"},
+				    { "data": "shardingNodes","title":"分片节点" },
+				    { "data": "shardingColumn","title":"分片字段"},
+				    { "data": "createTime","title":"创建时间","render":Date.fromLong },
+				    {
+						title:'操作',
+		                data: null,
+		                defaultContent: '',
+		                render:function(data, type, row ){
+		                	   var id = row.id;
+		                	   cache[id]=row;
+		                	   var del = "<button onclick='_do(1,"+id+")'>Del</button>";
+		                	   var eb = "<button onclick='_do(2,"+id+")'>Edit</button>";
+		                	  return del+eb;
+		                	},
+		                orderable: false
+		            },
+				],
+				//select: {
+		            //style:    'os',
+		            //selector: 'td:first-child'
+		        //},
+			});
+			
+			$('#table tbody').on( 'click', 'tr', function (i,k,l) {
+				if ( $(this).hasClass('selected') ) {
+		            $(this).removeClass('selected');
+		        }else {
+		            table.$('tr.selected').removeClass('selected');
+		            $(this).addClass('selected');
+		        }
+		    } );
+	}
+	
+	$(function() {
+		$('#addBtn').click(edit);
+		$('#queryBtn').click(query);
+		$('#updateRule').click(setTableRule);
+		$('#updateApp').click(insertOrUpdate);
+		$('#shardingRule').change(loadRuleInfo);
+
+		dbSer.list(null, function(datas) {
+			HTML.select('#logicDb', datas, 'name', 'name');
+		});
+
+		shardNodeSer.list(null, function(datas) {
+			HTML.select('#shardingNodes', datas, 'name', 'name');
+		});
+
+		funcSer.list(null, function(data) {
+			HTML.select('#shardingRule', data, 'name', 'name');
+		});
+
+		query();
+	});
+</script>
+</html>

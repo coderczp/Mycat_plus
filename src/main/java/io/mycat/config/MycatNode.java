@@ -23,16 +23,12 @@
  */
 package io.mycat.config;
 
-import org.slf4j.Logger; import org.slf4j.LoggerFactory;
-
 import io.mycat.config.model.MycatNodeConfig;
 
 /**
  * @author mycat
  */
 public class MycatNode {
-	private static final Logger LOGGER = LoggerFactory.getLogger(MycatNode.class);
-
 	private final String name;
 	private final MycatNodeConfig config;
 
@@ -50,7 +46,7 @@ public class MycatNode {
 	}
 
 	public boolean isOnline() {
-		return (true);
+		return true;
 	}
 
 }

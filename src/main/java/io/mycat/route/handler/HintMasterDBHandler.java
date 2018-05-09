@@ -8,10 +8,10 @@ import org.slf4j.Logger; import org.slf4j.LoggerFactory;
 import io.mycat.cache.LayerCachePool;
 import io.mycat.config.model.SchemaConfig;
 import io.mycat.config.model.SystemConfig;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.route.RouteResultset;
 import io.mycat.route.factory.RouteStrategyFactory;
-import io.mycat.server.ServerConnection;
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
 
 /**
  * 处理情况 sql hint: mycat:db_type=master/slave<br/>
@@ -29,7 +29,7 @@ public class HintMasterDBHandler implements HintHandler {
 	@Override
 	public RouteResultset route(SystemConfig sysConfig, SchemaConfig schema, int sqlType, 
 			String realSQL, String charset,
-			ServerConnection sc, LayerCachePool cachePool, String hintSQLValue, int hintSqlType, Map hintMap)
+			ClientConn sc, LayerCachePool cachePool, String hintSQLValue, int hintSqlType, Map hintMap)
 			throws SQLNonTransientException {
 		
 //		LOGGER.debug("realSQL: " + realSQL); // select * from travelrecord limit 1
@@ -58,9 +58,9 @@ public class HintMasterDBHandler implements HintHandler {
 //				}else{
 //					isRouteToMaster = false;
 //				}
-				if(sqlType == ServerParse.DELETE || sqlType == ServerParse.INSERT
-						||sqlType == ServerParse.REPLACE || sqlType == ServerParse.UPDATE
-						|| sqlType == ServerParse.DDL){
+				if(sqlType == SQLHandler.Type.DELETE || sqlType == SQLHandler.Type.INSERT
+						||sqlType == SQLHandler.Type.REPLACE || sqlType == SQLHandler.Type.UPDATE
+						|| sqlType == SQLHandler.Type.DDL){
 					LOGGER.error("should not use hint 'db_type' to route 'delete', 'insert', 'replace', 'update', 'ddl' to a slave db.");
 					isRouteToMaster = null;	// 不施加任何影响
 				}else{

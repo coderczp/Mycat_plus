@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="/res/css/bootstrap.min.css" rel="stylesheet">
+<link href="/res/css/bootstrap-modal.min.css" rel="stylesheet">
+<link href="/res/css/jquery-date.css" rel="stylesheet">
+<link href="/res/css/bootstrap-select.min.css" rel="stylesheet">
+
+<script src="/res/js/jquery.min.js"></script>
+<script src="/res/js/bootstrap.min.js"></script>
+<script src="/res/js/jstree.js"></script>
+<script src="/res/js/sharding.js"></script>
+<script src="/res/js/jquery-date.js"></script>
+<script src="/res/js/bootstrap-select.min.js"></script>
+<script src="/res/js/bootstrap-modal.pack.min.js"></script>
+
+<title>Mysql-sharding</title>
+</head>
+<body>
+	<nav class="navbar navbar-inverse" role="navigation" id="dtsNav"></nav>
+	<div class="container">
+		<div class="panel panel-success">
+			<div class="panel-heading">
+				<form class="form-inline" role="form">
+					<div class="input-group form-group">
+						<input name="app" id="app" type="text" class="form-control" placeholder="名称"></input>
+					</div>
+					<div class="input-group form-group">
+						<button class="btn btn-primary" id="queryBtn" type="button">搜索</button>
+						&nbsp;
+						<button class="btn btn-primary" id="addBtn" type="button">添加</button>
+					</div>
+				</form>
+			</div>
+			<div class="panel-body">
+				<table class="table  table-hover">
+					<thead>
+						<tr>
+							<td colspan="11">
+								<div class="alert alert-warning">
+									类型为 <strong>slave</strong> 才有 <strong>MasterId</strong> ,表示该 <strong>slave</strong> 为对应 <strong>Master</strong>
+									的从库,请确认数据库主从配置正确
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<th>ID</th>
+							<th>MasterId</th>
+							<th>名称</th>
+							<th>类型</th>
+							<th>主机</th>
+							<th>端口</th>
+							<th>用户</th>
+							<th>创建时间</th>
+							<th>删除</th>
+							<th>修改</th>
+							<th>主从管理</th>
+						</tr>
+					</thead>
+					<tbody id="res">
+					</tbody>
+				</table>
+			</div>
+
+			<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="myModalLabel">Mysql配置</h5>
+						</div>
+						<div class="modal-body">
+							<form class="form" role="form" id="form">
+								<div class="input-group form-group">
+									<span class="input-group-addon">名称</span> <input name="name" id="name" type="text" class="form-control"></input>
+								</div>
+								<div class="input-group form-group">
+									<span class="input-group-addon">主机</span> <input name="host" id="host" type="text" class="form-control"></input>
+								</div>
+								<div class="input-group form-group">
+									<span class="input-group-addon">端口</span> <input name="port" id="port" type="text" class="form-control"></input>
+								</div>
+								<div class="input-group form-group">
+									<span class="input-group-addon">账号</span> <input name="user" id="user" type="text" class="form-control"></input>
+								</div>
+								<div class="input-group form-group">
+									<span class="input-group-addon">密码</span> <input name="password" id="password" type="password"
+										class="form-control"></input>
+								</div>
+								<div class="input-group form-group">
+									<span class="input-group-addon">类型</span> <input name="type" id="type" type="text" readonly="readonly"
+										class="form-control"></input>
+								</div>
+								<div class="input-group form-group">
+									<span class="input-group-addon">MasterId</span> <input name="pid" id="pid" type="text" readonly="readonly"
+										class="form-control"></input>
+								</div>
+							</form>
+						</div>
+						<div class="modal-footer">
+							<button class="btn" id="updateApp" type="button">提交</button>
+							<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+	var api = APIFactory.pdb;
+
+	function tr(data) {
+		var id = data.id;
+		var name = data.name;
+		var host = data.host;
+		var port = data.port;
+		var user = data.user;
+		var pid = data.pid;
+		var type = data.type;
+		var start = Date.fromLong(data.createTime);
+
+		var masterId = pid || '--';
+		var del = HTML.ab("api.del(" + id + ")", "删除");
+		var salve = HTML.ab("openSlave(" + id + ")", "添加Slave");
+		var update = HTML.ab("openEdit(" + JSON.toStr(data) + ")", "修改");
+
+		return HTML.tr([ id, masterId, name, type, host, port, user, start,
+				del, update, salve ]);
+	}
+
+	function query() {
+		$('#res').html('');
+		var app = $('#app').val();
+		api.list({
+			"name" : app
+		}, showResponse);
+	}
+
+	function showResponse(data) {
+		var html = "";
+		for ( var i in data) {
+			html += tr(data[i]);
+		}
+		$('#res').html(html);
+	}
+
+	function openEdit(json) {
+		$("#form").bindData(json);
+		$('#myModal').modal('show');
+	}
+
+	function addMqlInfo() {
+		var arg = $("#form").serializeObject();
+		if (arg.type == 'slave' && !arg.pid) {
+			alert('Slave必须选择Master节点,如果没有Master,请先添加');
+			return false;
+		}
+		api.add(arg, function(x) {
+			query();
+			$("#form")[0].reset();
+			$('#myModal').modal('hide');
+		});
+	}
+
+	function openSlave(masterId) {
+		$('#type').val('slave');
+		$('#pid').val(masterId);
+		$('#myModal').modal('show');
+	}
+
+	function openAddPannel() {
+		$('#type').val('master');
+		$('#myModal').modal('show');
+	}
+
+	$(function() {
+		$('#queryBtn').click(query);
+		$('#updateApp').click(addMqlInfo);
+		$('#addBtn').click(openAddPannel);
+		query();
+	});
+</script>
+</html>

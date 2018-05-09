@@ -23,41 +23,59 @@
  */
 package io.mycat;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.mycat.config.loader.ConfigLoader;
+import io.mycat.config.loader.xml.XMLConfigLoader;
+import io.mycat.config.loader.xml.XMLSchemaLoader;
 import io.mycat.config.model.SystemConfig;
-import io.mycat.web.WebModule;
+import io.mycat.web.WebStarter;
 
 /**
  * @author mycat
  */
 public final class MycatStartup {
-    
-    private static final String dateFormat = "yyyy-MM-dd HH:mm:ss";
-    private static final Logger LOGGER     = LoggerFactory.getLogger(MycatStartup.class);
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MycatStartup.class);
 
     public static void main(String[] args) {
         try {
+            if (System.getProperty("spring.profiles.active") == null) {
+                System.setProperty("spring.profiles.active", "local");
+            }
+            
+            System.out.println(System.getProperty("spring.profiles.active"));
+
             String home = SystemConfig.getHomePath();
             if (home == null) {
                 System.out.println(SystemConfig.SYS_HOME + "  is not set.");
                 System.exit(-1);
             }
-            MycatServer server = MycatServer.getInstance();
+
+            final WebStarter m = new WebStarter(home);
+            m.doStart();
+
+            ConfigLoader configLoader = null;
+            configLoader = m.getBean(ConfigLoader.class);
+            if (configLoader == null) {
+                configLoader = useXmlConfigLoader();
+            }
+
+            final MycatServer server = MycatServer.getInstance();
+            server.init(configLoader);
             server.startup();
             System.out.println("MyCAT Server startup successfully. see logs in logs/mycat.log");
+            m.join();
 
-            WebModule m = new WebModule();
-            m.doStart(server);
-            
         } catch (Exception e) {
-            SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
-            LOGGER.error(sdf.format(new Date()) + " startup error", e);
+            LOGGER.error("startup error", e);
             System.exit(-1);
         }
+    }
+
+    private static ConfigLoader useXmlConfigLoader() {
+        //读取schema.xml，rule.xml和server.xml
+        return new XMLConfigLoader(new XMLSchemaLoader());
     }
 }

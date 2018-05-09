@@ -28,14 +28,12 @@ import java.nio.ByteBuffer;
 import io.mycat.MycatServer;
 import io.mycat.backend.mysql.PacketUtil;
 import io.mycat.config.Fields;
-import io.mycat.manager.ManagerConnection;
-import io.mycat.net.FrontendConnection;
 import io.mycat.net.NIOProcessor;
 import io.mycat.net.mysql.EOFPacket;
 import io.mycat.net.mysql.FieldPacket;
 import io.mycat.net.mysql.ResultSetHeaderPacket;
 import io.mycat.net.mysql.RowDataPacket;
-import io.mycat.server.ServerConnection;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.util.LongUtil;
 import io.mycat.util.StringUtil;
 import io.mycat.util.TimeUtil;
@@ -78,7 +76,7 @@ public final class ShowConnectionSQL {
         eof.packetId = ++packetId;
     }
 
-    public static void execute(ManagerConnection c) {
+    public static void execute(ClientConn c) {
         ByteBuffer buffer = c.allocate();
 
         // write header
@@ -96,12 +94,12 @@ public final class ShowConnectionSQL {
         byte packetId = eof.packetId;
         String charset = c.getCharset();
         for (NIOProcessor p : MycatServer.getInstance().getProcessors()) {
-            for (FrontendConnection fc : p.getFrontends().values()) {
+            for (ClientConn fc : p.getFrontends().values()) {
                 if (!fc.isClosed()) {
                 	if(fc.getExecuteSql()==null){
                 		continue;
                 	}
-                	if(fc instanceof ServerConnection){
+                	if(fc instanceof ClientConn){
                 		RowDataPacket row = getRow(fc, charset);
                         row.packetId = ++packetId;
                         buffer = row.write(buffer, c,true);
@@ -119,7 +117,7 @@ public final class ShowConnectionSQL {
         c.write(buffer);
     }
 
-    private static RowDataPacket getRow(FrontendConnection c, String charset) {
+    private static RowDataPacket getRow(ClientConn c, String charset) {
     	String executeSql = c.getExecuteSql();
         RowDataPacket row = new RowDataPacket(FIELD_COUNT);
         row.add(LongUtil.toBytes(c.getId()));

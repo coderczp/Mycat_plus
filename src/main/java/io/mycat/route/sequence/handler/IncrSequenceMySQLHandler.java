@@ -1,7 +1,5 @@
 package io.mycat.route.sequence.handler;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -10,8 +8,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import io.mycat.route.util.PropertiesUtil;
-import org.slf4j.Logger; import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.mycat.MycatServer;
 import io.mycat.backend.BackendConnection;
@@ -22,7 +20,8 @@ import io.mycat.config.util.ConfigException;
 import io.mycat.net.mysql.ErrorPacket;
 import io.mycat.net.mysql.RowDataPacket;
 import io.mycat.route.RouteResultsetNode;
-import io.mycat.server.parser.ServerParse;
+import io.mycat.route.util.PropertiesUtil;
+import io.mycat.server.handler.plus.SQLHandler;
 
 public class IncrSequenceMySQLHandler implements SequenceHandler {
 
@@ -153,7 +152,7 @@ class FetchMySQLSequnceHandler implements ResponseHandler {
 			}
 			// 修正获取seq的逻辑，在读写分离的情况下只能走写节点。修改Select模式为Update模式。
 			mysqlDN.getConnection(mysqlDN.getDatabase(), true,
-					new RouteResultsetNode(seqVal.dataNode, ServerParse.UPDATE,
+					new RouteResultsetNode(seqVal.dataNode, SQLHandler.Type.UPDATE,
 							seqVal.sql), this, seqVal);
 		} catch (Exception e) {
 			LOGGER.warn("get connection err " + e);

@@ -26,7 +26,7 @@ package io.mycat.net.mysql;
 import java.nio.ByteBuffer;
 
 import io.mycat.backend.mysql.BufferUtil;
-import io.mycat.net.FrontendConnection;
+import io.mycat.net.plus.ClientConn;
 
 /**
  * load data local infile 向客户端请求发送文件用
@@ -39,7 +39,7 @@ public class RequestFilePacket extends MySQLPacket
 
 
     @Override
-    public ByteBuffer write(ByteBuffer buffer, FrontendConnection c, boolean writeSocketIfFull)
+    public ByteBuffer write(ByteBuffer buffer, ClientConn c, boolean writeSocketIfFull)
     {
         int size = calcPacketSize();
         buffer = c.checkWriteBuffer(buffer, c.getPacketHeaderSize() + size, writeSocketIfFull);

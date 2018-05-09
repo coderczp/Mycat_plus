@@ -10,8 +10,8 @@ import io.mycat.cache.LayerCachePool;
 import io.mycat.catlets.Catlet;
 import io.mycat.config.model.SchemaConfig;
 import io.mycat.config.model.SystemConfig;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.route.RouteResultset;
-import io.mycat.server.ServerConnection;
 import io.mycat.sqlengine.EngineCtx;
 
 /**
@@ -39,7 +39,7 @@ public class HintCatletHandler implements HintHandler {
 	 */
 	@Override
 	public RouteResultset route(SystemConfig sysConfig, SchemaConfig schema,
-			int sqlType, String realSQL, String charset, ServerConnection sc,
+			int sqlType, String realSQL, String charset, ClientConn sc,
 			LayerCachePool cachePool, String hintSQLValue,int hintSqlType, Map hintMap)
 			throws SQLNonTransientException {
 		// sc.setEngineCtx ctx

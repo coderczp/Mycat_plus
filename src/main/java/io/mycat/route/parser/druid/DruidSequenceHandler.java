@@ -8,6 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.mycat.config.model.SystemConfig;
+import io.mycat.ext.uuid.SnowFlakeSequenceHandler;
 import io.mycat.route.SessionSQLPair;
 import io.mycat.route.sequence.handler.IncrSequenceMySQLHandler;
 import io.mycat.route.sequence.handler.IncrSequencePropHandler;
@@ -22,19 +23,20 @@ import io.mycat.util.TimeUtil;
  * @date 2015/03/13
  */
 public class DruidSequenceHandler {
-    private final SequenceHandler sequenceHandler;
-    
+    private final SequenceHandler                   sequenceHandler;
+
     /**
      * 分段锁
      */
-    private final static Map<String,ReentrantLock> segmentLock = new ConcurrentHashMap<>();
+    private final static Map<String, ReentrantLock> segmentLock     = new ConcurrentHashMap<>();
 
     /**
      * 获取MYCAT SEQ的匹配语句
      */
-    private final static String MATCHED_FEATURE = "NEXT VALUE FOR MYCATSEQ_";
+    private final static String                     MATCHED_FEATURE = "NEXT VALUE FOR MYCATSEQ_";
 
-    private final static Pattern pattern = Pattern.compile("(?:(\\s*next\\s+value\\s+for\\s*MYCATSEQ_(\\w+))(,|\\)|\\s)*)+", Pattern.CASE_INSENSITIVE);
+    private final static Pattern                    pattern         = Pattern
+        .compile("(?:(\\s*next\\s+value\\s+for\\s*MYCATSEQ_(\\w+))(,|\\)|\\s)*)+", Pattern.CASE_INSENSITIVE);
 
     public DruidSequenceHandler(int seqHandlerType) {
         switch (seqHandlerType) {
@@ -46,6 +48,9 @@ public class DruidSequenceHandler {
                 break;
             case SystemConfig.SEQUENCEHANDLER_LOCAL_TIME:
                 sequenceHandler = IncrSequenceTimeHandler.getInstance();
+                break;
+            case SystemConfig.SNOWFLAKE_SEQUENCEHANDLER:
+                sequenceHandler = SnowFlakeSequenceHandler.getInstance();
                 break;
             default:
                 throw new java.lang.IllegalArgumentException("Invalid sequnce handler type " + seqHandlerType);
@@ -59,48 +64,48 @@ public class DruidSequenceHandler {
      * @return
      * @throws UnsupportedEncodingException
      */
-    public String getExecuteSql(SessionSQLPair pair, String charset) throws UnsupportedEncodingException,InterruptedException {
-    	String executeSql = pair.sql;
+    public String getExecuteSql(SessionSQLPair pair, String charset) throws UnsupportedEncodingException,
+                                                                     InterruptedException {
+        String executeSql = pair.sql;
         if (null != pair.sql && !"".equals(pair.sql)) {
             Matcher matcher = pattern.matcher(executeSql);
-            if(matcher.find()){
-            	String tableName = matcher.group(2);
+            if (matcher.find()) {
+                String tableName = matcher.group(2);
                 ReentrantLock lock = getSegLock(tableName);
-				lock.lock();
-				try {
-                	matcher = pattern.matcher(executeSql);
-                	while(matcher.find()){            
-                		long value = sequenceHandler.nextId(tableName.toUpperCase());
-                        executeSql = executeSql.replaceFirst(matcher.group(1), " "+Long.toString(value));
+                lock.lock();
+                try {
+                    matcher = pattern.matcher(executeSql);
+                    while (matcher.find()) {
+                        long value = sequenceHandler.nextId(tableName.toUpperCase());
+                        executeSql = executeSql.replaceFirst(matcher.group(1), " " + Long.toString(value));
                         pair.session.getSource().setLastWriteTime(TimeUtil.currentTimeMillis());
                     }
-				} finally {
-					lock.unlock();
-				}
+                } finally {
+                    lock.unlock();
+                }
             }
         }
         return executeSql;
     }
-    
+
     /*
      * 获取分段锁 
      * @param name
      * @return
      */
-    private ReentrantLock getSegLock(String name){
-    	ReentrantLock lock = segmentLock.get(name);
-    	if(lock==null){
-    		synchronized (segmentLock) {
-    			lock = segmentLock.get(name);
-				if(lock==null){
-					lock = new ReentrantLock();
-					segmentLock.put(name, lock);
-				}
-			}
-    	}
-    	return lock;
+    private ReentrantLock getSegLock(String name) {
+        ReentrantLock lock = segmentLock.get(name);
+        if (lock == null) {
+            synchronized (segmentLock) {
+                lock = segmentLock.get(name);
+                if (lock == null) {
+                    lock = new ReentrantLock();
+                    segmentLock.put(name, lock);
+                }
+            }
+        }
+        return lock;
     }
-
 
     //just for test
     public String getTableName(String sql) {
@@ -110,6 +115,5 @@ public class DruidSequenceHandler {
         }
         return null;
     }
-
 
 }

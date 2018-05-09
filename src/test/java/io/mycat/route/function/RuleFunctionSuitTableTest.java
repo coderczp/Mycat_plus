@@ -109,7 +109,7 @@ public class RuleFunctionSuitTableTest {
 	public void testPartitionByHashMod() {
 		
 		PartitionByHashMod partition = new PartitionByHashMod();
-		partition.setCount(3); // partition = 3;
+		partition.setPartitionNum(3);
 		Assert.assertEquals(3, partition.getPartitionNum());
 		
 		RuleConfig rule = new RuleConfig("id", "partition-hash-mod");

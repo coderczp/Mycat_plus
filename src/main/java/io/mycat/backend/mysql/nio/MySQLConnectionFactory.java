@@ -39,35 +39,32 @@ import io.mycat.net.factory.BackendConnectionFactory;
  * @author mycat
  */
 public class MySQLConnectionFactory extends BackendConnectionFactory {
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public MySQLConnection make(MySQLDataSource pool, ResponseHandler handler,
-			String schema) throws IOException {
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public MySQLConnection make(MySQLDataSource pool, ResponseHandler handler, String schema) throws IOException {
 
-		DBHostConfig dsc = pool.getConfig();
-		NetworkChannel channel = openSocketChannel(MycatServer.getInstance()
-				.isAIO());
+        DBHostConfig dsc = pool.getConfig();
+        MycatServer instance = MycatServer.getInstance();
+        NetworkChannel channel = openSocketChannel(instance.isAIO());
+        int txIsolation = instance.getConfig().getSystem().getTxIsolation();
+        MySQLConnection c = new MySQLConnection(channel, pool.isReadNode(),txIsolation);
+        instance.getConfig().setSocketParams(c, false);
+        c.setHost(dsc.getIp());
+        c.setPort(dsc.getPort());
+        c.setUser(dsc.getUser());
+        c.setPassword(dsc.getPassword());
+        c.setSchema(schema);
+        c.setHandler(new MySQLConnectionAuthenticator(c, handler));
+        c.setPool(pool);
+        c.setIdleTimeout(pool.getConfig().getIdleTimeout());
+        if (channel instanceof AsynchronousSocketChannel) {
+            ((AsynchronousSocketChannel) channel).connect(new InetSocketAddress(dsc.getIp(), dsc.getPort()), c,
+                (CompletionHandler) instance.getConnector());
+        } else {
+            ((NIOConnector) instance.getConnector()).postConnect(c);
 
-		MySQLConnection c = new MySQLConnection(channel, pool.isReadNode());
-		MycatServer.getInstance().getConfig().setSocketParams(c, false);
-		c.setHost(dsc.getIp());
-		c.setPort(dsc.getPort());
-		c.setUser(dsc.getUser());
-		c.setPassword(dsc.getPassword());
-		c.setSchema(schema);
-		c.setHandler(new MySQLConnectionAuthenticator(c, handler));
-		c.setPool(pool);
-		c.setIdleTimeout(pool.getConfig().getIdleTimeout());
-		if (channel instanceof AsynchronousSocketChannel) {
-			((AsynchronousSocketChannel) channel).connect(
-					new InetSocketAddress(dsc.getIp(), dsc.getPort()), c,
-					(CompletionHandler) MycatServer.getInstance()
-							.getConnector());
-		} else {
-			((NIOConnector) MycatServer.getInstance().getConnector())
-					.postConnect(c);
-
-		}
-		return c;
-	}
+        }
+        return c;
+    }
 
 }

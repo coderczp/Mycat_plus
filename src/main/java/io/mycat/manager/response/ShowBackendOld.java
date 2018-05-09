@@ -6,12 +6,12 @@ import io.mycat.backend.BackendConnection;
 import io.mycat.backend.mysql.PacketUtil;
 import io.mycat.backend.mysql.nio.MySQLConnection;
 import io.mycat.config.Fields;
-import io.mycat.manager.ManagerConnection;
 import io.mycat.net.NIOProcessor;
 import io.mycat.net.mysql.EOFPacket;
 import io.mycat.net.mysql.FieldPacket;
 import io.mycat.net.mysql.ResultSetHeaderPacket;
 import io.mycat.net.mysql.RowDataPacket;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.util.IntegerUtil;
 import io.mycat.util.LongUtil;
 import io.mycat.util.StringUtil;
@@ -56,7 +56,7 @@ public class ShowBackendOld {
 		eof.packetId = ++packetId;
 	}
 
-	public static void execute(ManagerConnection c) {
+	public static void execute(ClientConn c) {
 		ByteBuffer buffer = c.allocate();
 		buffer = header.write(buffer, c, true);
 		for (FieldPacket field : fields) {

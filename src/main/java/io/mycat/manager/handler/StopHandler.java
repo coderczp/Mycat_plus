@@ -24,8 +24,8 @@
 package io.mycat.manager.handler;
 
 import io.mycat.config.ErrorCode;
-import io.mycat.manager.ManagerConnection;
 import io.mycat.manager.response.StopHeartbeat;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.route.parser.ManagerParseStop;
 
 /**
@@ -33,13 +33,13 @@ import io.mycat.route.parser.ManagerParseStop;
  */
 public final class StopHandler {
 
-    public static void handle(String stmt, ManagerConnection c, int offset) {
+    public static void handle(String stmt, ClientConn c, int offset) {
         switch (ManagerParseStop.parse(stmt, offset)) {
         case ManagerParseStop.HEARTBEAT:
             StopHeartbeat.execute(stmt, c);
             break;
         default:
-            c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement");
+            c.writeErrMessage((byte)1,ErrorCode.ER_YES, "Unsupported statement");
         }
     }
 

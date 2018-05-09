@@ -1,10 +1,7 @@
 package io.mycat.buffer;
 
 import java.nio.ByteBuffer;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;

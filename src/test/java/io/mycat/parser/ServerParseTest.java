@@ -4,7 +4,8 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
+import io.mycat.server.parser.SimpleSqlParser;
 
 public class ServerParseTest {
 	/**
@@ -35,121 +36,121 @@ public class ServerParseTest {
 	@Test
 	public void testDesc() {
 		String sql = "desc a";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.DESCRIBE, sqlType);
+		Assert.assertEquals(SQLHandler.Type.DESCRIBE, sqlType);
 	}
 	
 	@Test
 	public void testDescribe() {
 		String sql = "describe a";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.DESCRIBE, sqlType);
+		Assert.assertEquals(SQLHandler.Type.DESCRIBE, sqlType);
 	}
 	
 	@Test
 	public void testDelete() {
 		String sql = "delete from a where id = 1";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.DELETE, sqlType);
+		Assert.assertEquals(SQLHandler.Type.DELETE, sqlType);
 	}
 	
 	@Test
 	public void testInsert() {
 		String sql = "insert into a(name) values ('zhangsan')";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.INSERT, sqlType);
+		Assert.assertEquals(SQLHandler.Type.INSERT, sqlType);
 	}
 	
 	@Test
 	public void testReplace() {
 		String sql = "replace into t(id, update_time) select 1, now();  ";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.REPLACE, sqlType);
+		Assert.assertEquals(SQLHandler.Type.REPLACE, sqlType);
 	}
 	
 	@Test
 	public void testSet() {
 		String sql = "SET @var_name = 'value';  ";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.SET, sqlType);
+		Assert.assertEquals(SQLHandler.Type.SET, sqlType);
 	}
 	
 	@Test
 	public void testShow() {
 		String sql = "show full tables";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.SHOW, sqlType);
+		Assert.assertEquals(SQLHandler.Type.SHOW, sqlType);
 	}
 	
 	@Test
 	public void testStart() {
 		String sql = "start ";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.START, sqlType);
+		Assert.assertEquals(SQLHandler.Type.START, sqlType);
 	}
 	
 	@Test
 	public void testUpdate() {
 		String sql = "update a set name='wdw' where id = 1";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.UPDATE, sqlType);
+		Assert.assertEquals(SQLHandler.Type.UPDATE, sqlType);
 	}
 	
 	@Test
 	public void testKill() {
 		String sql = "kill 1";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.KILL, sqlType);
+		Assert.assertEquals(SQLHandler.Type.KILL, sqlType);
 	}
 	
 	@Test
 	public void testSavePoint() {
 		String sql = "SAVEPOINT ";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.SAVEPOINT, sqlType);
+		Assert.assertEquals(SQLHandler.Type.SAVEPOINT, sqlType);
 	}
 	
 	@Test
 	public void testUse() {
 		String sql = "use db1 ";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.USE, sqlType);
+		Assert.assertEquals(SQLHandler.Type.USE, sqlType);
 	}
 	
 	@Test
 	public void testExplain() {
 		String sql = "explain select * from a ";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.EXPLAIN, sqlType);
+		Assert.assertEquals(SQLHandler.Type.EXPLAIN, sqlType);
 	}
 	
 	@Test
 	public void testKillQuery() {
 		String sql = "kill query 1102 ";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.KILL_QUERY, sqlType);
+		Assert.assertEquals(SQLHandler.Type.KILL_QUERY, sqlType);
 	}
 	
 	@Test
 	public void testHelp() {
 		String sql = "help contents ";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.HELP, sqlType);
+		Assert.assertEquals(SQLHandler.Type.HELP, sqlType);
 	}
 	
 	@Test
@@ -165,41 +166,41 @@ public class ServerParseTest {
 	@Test
 	public void testCall() {
 		String sql = "CALL demo_in_parameter(@p_in); ";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.CALL, sqlType);
+		Assert.assertEquals(SQLHandler.Type.CALL, sqlType);
 	}
 	
 	@Test
 	public void testRollback() {
 		String sql = "rollback; ";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.ROLLBACK, sqlType);
+		Assert.assertEquals(SQLHandler.Type.ROLLBACK, sqlType);
 	}
 	
 	@Test
 	public void testSelect() {
 		String sql = "select * from a";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.SELECT, sqlType);
+		Assert.assertEquals(SQLHandler.Type.SELECT, sqlType);
 	}
 	
 	@Test
 	public void testBegin() {
 		String sql = "begin";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.BEGIN, sqlType);
+		Assert.assertEquals(SQLHandler.Type.BEGIN, sqlType);
 	}
 	
 	@Test
 	public void testCommit() {
 		String sql = "COMMIT 'nihao'";
-		int result = ServerParse.parse(sql);
+		int result = SimpleSqlParser.parse(sql);
 		int sqlType = result & 0xff;
-		Assert.assertEquals(ServerParse.COMMIT, sqlType);
+		Assert.assertEquals(SQLHandler.Type.COMMIT, sqlType);
 	}
 
 }

@@ -27,12 +27,13 @@ import java.io.IOException;
 import java.nio.channels.NetworkChannel;
 
 import io.mycat.MycatServer;
+import io.mycat.config.MycatConfig;
 import io.mycat.config.MycatPrivileges;
 import io.mycat.config.model.SystemConfig;
 import io.mycat.net.FrontendConnection;
 import io.mycat.net.factory.FrontendConnectionFactory;
-import io.mycat.server.handler.ServerLoadDataInfileHandler;
-import io.mycat.server.handler.ServerPrepareHandler;
+import io.mycat.server.handler.plus.impl.ext.LoadDataInfileProcessorImpl;
+import io.mycat.server.handler.plus.impl.ext.ServerPrepareHandler;
 
 /**
  * @author mycat
@@ -41,12 +42,17 @@ public class ServerConnectionFactory extends FrontendConnectionFactory {
 
     @Override
     protected FrontendConnection getConnection(NetworkChannel channel) throws IOException {
-        SystemConfig sys = MycatServer.getInstance().getConfig().getSystem();
-        ServerConnection c = new ServerConnection(channel);
-        MycatServer.getInstance().getConfig().setSocketParams(c, true);
+        MycatServer instance = MycatServer.getInstance();
+        SystemConfig sys = instance.getConfig().getSystem();
+        MycatConfig config = instance.getConfig();
+        
+        FrontendConnection c = new FrontendConnection(channel);
+        config.setClientSocketParams(c);
+        config.configChannel(channel);
+        c.setQueryHandler(new HandlerDispatch(c));
         c.setPrivileges(MycatPrivileges.instance());
-        c.setQueryHandler(new ServerQueryHandler(c));
-        c.setLoadDataInfileHandler(new ServerLoadDataInfileHandler(c));
+        
+        c.setLoadDataInfileHandler(new LoadDataInfileProcessorImpl(c));
         c.setPrepareHandler(new ServerPrepareHandler(c));
         c.setTxIsolation(sys.getTxIsolation());
         c.setSession2(new NonBlockingSession(c));

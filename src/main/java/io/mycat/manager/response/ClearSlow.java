@@ -29,26 +29,26 @@ import io.mycat.backend.datasource.PhysicalDBPool;
 import io.mycat.config.ErrorCode;
 import io.mycat.config.MycatConfig;
 import io.mycat.config.model.SchemaConfig;
-import io.mycat.manager.ManagerConnection;
 import io.mycat.net.mysql.OkPacket;
+import io.mycat.net.plus.ClientConn;
 
 /**
  * @author mycat
  */
 public class ClearSlow {
 
-    public static void dataNode(ManagerConnection c, String name) {
+    public static void dataNode(ClientConn c, String name) {
     	PhysicalDBNode dn = MycatServer.getInstance().getConfig().getDataNodes().get(name);
     	PhysicalDBPool ds = null;
         if (dn != null && ((ds = dn.getDbPool())!= null)) {
            // ds.getSqlRecorder().clear();
             c.write(c.writeToBuffer(OkPacket.OK, c.allocate()));
         } else {
-            c.writeErrMessage(ErrorCode.ER_YES, "Invalid DataNode:" + name);
+            c.writeErrMessage((byte)1,ErrorCode.ER_YES, "Invalid DataNode:" + name);
         }
     }
 
-    public static void schema(ManagerConnection c, String name) {
+    public static void schema(ClientConn c, String name) {
         MycatConfig conf = MycatServer.getInstance().getConfig();
         SchemaConfig schema = conf.getSchemas().get(name);
         if (schema != null) {
@@ -62,7 +62,7 @@ public class ClearSlow {
 //            }
             c.write(c.writeToBuffer(OkPacket.OK, c.allocate()));
         } else {
-            c.writeErrMessage(ErrorCode.ER_YES, "Invalid Schema:" + name);
+            c.writeErrMessage((byte)1,ErrorCode.ER_YES, "Invalid Schema:" + name);
         }
     }
 

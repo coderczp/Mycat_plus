@@ -13,7 +13,7 @@ import io.mycat.config.loader.xml.XMLSchemaLoader;
 import io.mycat.config.model.SchemaConfig;
 import io.mycat.config.model.SystemConfig;
 import io.mycat.route.factory.RouteStrategyFactory;
-import io.mycat.server.parser.ServerParse;
+import io.mycat.server.handler.plus.SQLHandler;
 import junit.framework.Assert;
 
 public class DruidMysqlSqlParserTest
@@ -80,7 +80,7 @@ public class DruidMysqlSqlParserTest
 	public void testLockTableSql() throws SQLNonTransientException{
 		String sql = "lock tables goods write";
 		SchemaConfig schema = schemaMap.get("TESTDB");
-		RouteResultset rrs = routeStrategy.route(new SystemConfig(), schema, ServerParse.LOCK, sql, null, null, cachePool);
+		RouteResultset rrs = routeStrategy.route(new SystemConfig(), schema, SQLHandler.Type.LOCK, sql, null, null, cachePool);
 		Assert.assertEquals(3, rrs.getNodes().length);
 	}
 

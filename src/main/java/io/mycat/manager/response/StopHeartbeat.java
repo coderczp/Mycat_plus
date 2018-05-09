@@ -25,12 +25,13 @@ package io.mycat.manager.response;
 
 import java.util.Map;
 
-import org.slf4j.Logger; import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.mycat.MycatServer;
 import io.mycat.backend.datasource.PhysicalDBPool;
-import io.mycat.manager.ManagerConnection;
 import io.mycat.net.mysql.OkPacket;
+import io.mycat.net.plus.ClientConn;
 import io.mycat.route.parser.ManagerParseStop;
 import io.mycat.route.parser.util.Pair;
 import io.mycat.util.FormatUtil;
@@ -45,7 +46,7 @@ public final class StopHeartbeat {
 
     private static final Logger logger = LoggerFactory.getLogger(StopHeartbeat.class);
 
-    public static void execute(String stmt, ManagerConnection c) {
+    public static void execute(String stmt, ClientConn c) {
         int count = 0;
         Pair<String[], Integer> keys = ManagerParseStop.getPair(stmt);
         if (keys.getKey() != null && keys.getValue() != null) {
